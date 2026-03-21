@@ -17,12 +17,33 @@ export default function FlipCard({ word, studyType, isFlipped, onFlip, isFavorit
 
   return (
     <div
-      style={{ width: '100%', perspective: '1000px', cursor: 'pointer', userSelect: 'none', position: 'relative' }}
+      style={{ width: '100%', perspective: '1000px', cursor: 'pointer', userSelect: 'none' }}
       onClick={onFlip}
     >
       <div className={`flipper${isFlipped ? ' flipped' : ''}`}>
         {/* 앞면 */}
         <div className="card-face" style={{ zIndex: isFlipped ? 0 : 1 }}>
+          {onToggleFavorite && (
+            <button
+              onClick={e => { e.stopPropagation(); onToggleFavorite() }}
+              title={isFavorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+              style={{
+                position: 'absolute',
+                top: '14px',
+                right: '14px',
+                background: 'none',
+                border: 'none',
+                fontSize: '1.6rem',
+                lineHeight: 1,
+                cursor: 'pointer',
+                color: isFavorited ? '#f6ad55' : 'rgba(0,0,0,0.18)',
+                transition: 'color 0.15s',
+                padding: '4px',
+              }}
+            >
+              {isFavorited ? '★' : '☆'}
+            </button>
+          )}
           <div style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--primary-light)', marginBottom: '6px' }}>
             {isSent ? 'Japanese Sentence' : 'Japanese'}
           </div>
@@ -60,30 +81,6 @@ export default function FlipCard({ word, studyType, isFlipped, onFlip, isFavorit
           )}
         </div>
       </div>
-
-      {/* 즐겨찾기 버튼 — 카드 위에 오버레이 */}
-      {onToggleFavorite && (
-        <button
-          onClick={e => { e.stopPropagation(); onToggleFavorite() }}
-          title={isFavorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-          style={{
-            position: 'absolute',
-            top: '14px',
-            right: '14px',
-            zIndex: 10,
-            background: 'none',
-            border: 'none',
-            fontSize: '1.6rem',
-            lineHeight: 1,
-            cursor: 'pointer',
-            color: isFavorited ? '#f6ad55' : 'rgba(0,0,0,0.18)',
-            transition: 'color 0.15s, transform 0.1s',
-            padding: '4px',
-          }}
-        >
-          {isFavorited ? '★' : '☆'}
-        </button>
-      )}
     </div>
   )
 }
