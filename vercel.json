@@ -1,4 +1,3 @@
 {
-  "framework": "nextjs",
-  "installCommand": "rm -f package-lock.json && npm install && npm install lightningcss-linux-x64-gnu"
+  "framework": "nextjs"
 }
