@@ -1,12 +1,15 @@
 'use client'
 
+import { signOut } from '@/app/login/actions'
+
 interface HeaderProps {
   title: string
   showBack: boolean
   onBack: () => void
+  showLogout?: boolean
 }
 
-export default function Header({ title, showBack, onBack }: HeaderProps) {
+export default function Header({ title, showBack, onBack, showLogout }: HeaderProps) {
   return (
     <header style={{
       width: '100%',
@@ -45,6 +48,26 @@ export default function Header({ title, showBack, onBack }: HeaderProps) {
       }}>
         {title}
       </h1>
+      {showLogout && (
+        <form action={signOut} style={{ position: 'absolute', right: '14px' }}>
+          <button
+            type="submit"
+            style={{
+              background: 'rgba(255,255,255,0.18)',
+              border: 'none',
+              color: '#fff',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              padding: '5px 10px',
+              borderRadius: '6px',
+              letterSpacing: '0.02em',
+            }}
+          >
+            로그아웃
+          </button>
+        </form>
+      )}
     </header>
   )
 }

@@ -11,9 +11,10 @@ import StudyView from './StudyView'
 interface AppShellProps {
   initialWordSets: WordSet[]
   initialSentSets: WordSet[]
+  userEmail: string
 }
 
-export default function AppShell({ initialWordSets, initialSentSets }: AppShellProps) {
+export default function AppShell({ initialWordSets, initialSentSets, userEmail }: AppShellProps) {
   const [appScreen, setAppScreen] = useState<AppScreen>('menu')
   const [studyType, setStudyType] = useState<StudyType>('word')
   const [currentSetId, setCurrentSetId] = useState<string | null>(null)
@@ -61,7 +62,12 @@ export default function AppShell({ initialWordSets, initialSentSets }: AppShellP
 
   return (
     <div style={{ width: '100%', maxWidth: '480px', display: 'flex', flexDirection: 'column', minHeight: '100dvh' }}>
-      <Header title={headerTitle()} showBack={appScreen !== 'menu'} onBack={goBack} />
+      <Header
+        title={headerTitle()}
+        showBack={appScreen !== 'menu'}
+        onBack={goBack}
+        showLogout={appScreen === 'menu'}
+      />
 
       {appScreen === 'menu' && (
         <MenuView
