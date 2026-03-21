@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #2d6a4f;
+  --primary-light: #52b788;
+  --bg: #f5f5f0;
+  --card-bg: #ffffff;
+  --text: #1a1a2e;
+  --text-sub: #555566;
+  --border: #dde3d8;
+  --shadow: rgba(0,0,0,0.10);
+  --btn-bg: #eaf3ec;
+  --btn-active-bg: #2d6a4f;
+  --btn-active-text: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg);
+  font-family: 'Noto Sans KR', 'Hiragino Sans', 'Apple SD Gothic Neo', sans-serif;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text);
+}
+
+/* Flip animation */
+.flipper {
+  width: 100%;
+  min-height: 240px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.4, 0.2, 0.2, 1);
+}
+
+.flipper.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 240px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 18px;
+  background: var(--card-bg);
+  box-shadow: 0 4px 24px var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 28px;
+  gap: 10px;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+/* Speak button animation */
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(45,106,79,0.45); }
+  70%  { box-shadow: 0 0 0 10px rgba(45,106,79,0); }
+  100% { box-shadow: 0 0 0 0 rgba(45,106,79,0); }
+}
+
+.speak-btn.speaking {
+  background: var(--primary) !important;
+  color: #fff !important;
+  animation: pulse-ring 0.9s ease-in-out infinite;
+}
