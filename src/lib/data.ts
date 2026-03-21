@@ -7,7 +7,7 @@ export async function getSets(type: StudyType): Promise<WordSet[]> {
     .from('sets')
     .select('*, words(count)')
     .eq('type', type)
-    .order('created_at', { ascending: true })
+    .order('sort_order', { ascending: true })
 
   if (error) throw new Error(error.message)
 

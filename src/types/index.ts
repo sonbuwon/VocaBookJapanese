@@ -6,6 +6,7 @@ export interface WordSet {
   id: string
   name: string
   type: StudyType
+  sort_order: number
   created_at: string
   words?: Word[]
   word_count?: number

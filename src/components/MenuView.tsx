@@ -80,6 +80,25 @@ export default function MenuView({
         </div>
         <div style={{ fontSize: '1.2rem', color: 'var(--primary-light)' }}>›</div>
       </div>
+
+      <a
+        href="/admin"
+        style={{
+          display: 'block',
+          textAlign: 'center',
+          marginTop: '8px',
+          padding: '10px',
+          fontSize: '0.85rem',
+          color: 'var(--text-sub)',
+          textDecoration: 'none',
+          borderRadius: '10px',
+          border: '1px solid var(--border)',
+          background: 'var(--card-bg)',
+          transition: 'color 0.15s',
+        }}
+      >
+        ⚙ 단어 관리
+      </a>
     </div>
   )
 }
