@@ -8,6 +8,7 @@ export default async function AdminPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/login')
+  if (user.app_metadata?.role !== 'admin') redirect('/')
 
   const [wordSets, sentSets] = await Promise.all([
     getSets('word'),

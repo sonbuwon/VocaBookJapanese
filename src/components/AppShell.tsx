@@ -12,9 +12,10 @@ interface AppShellProps {
   initialWordSets: WordSet[]
   initialSentSets: WordSet[]
   userEmail: string
+  isAdmin: boolean
 }
 
-export default function AppShell({ initialWordSets, initialSentSets, userEmail }: AppShellProps) {
+export default function AppShell({ initialWordSets, initialSentSets, userEmail, isAdmin }: AppShellProps) {
   const [appScreen, setAppScreen] = useState<AppScreen>('menu')
   const [studyType, setStudyType] = useState<StudyType>('word')
   const [currentSetId, setCurrentSetId] = useState<string | null>(null)
@@ -76,6 +77,7 @@ export default function AppShell({ initialWordSets, initialSentSets, userEmail }
           sentSetCount={sentSets.length}
           sentCount={sentTotal}
           onSelect={showList}
+          isAdmin={isAdmin}
         />
       )}
 

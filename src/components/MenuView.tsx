@@ -8,10 +8,11 @@ interface MenuViewProps {
   sentSetCount: number
   sentCount: number
   onSelect: (type: StudyType) => void
+  isAdmin: boolean
 }
 
 export default function MenuView({
-  wordSetCount, wordCount, sentSetCount, sentCount, onSelect
+  wordSetCount, wordCount, sentSetCount, sentCount, onSelect, isAdmin
 }: MenuViewProps) {
   const menuBtnStyle: React.CSSProperties = {
     background: 'var(--card-bg)',
@@ -81,7 +82,7 @@ export default function MenuView({
         <div style={{ fontSize: '1.2rem', color: 'var(--primary-light)' }}>›</div>
       </div>
 
-      <a
+      {isAdmin && <a
         href="/admin"
         style={{
           display: 'block',
@@ -98,7 +99,7 @@ export default function MenuView({
         }}
       >
         ⚙ 단어 관리
-      </a>
+      </a>}
     </div>
   )
 }

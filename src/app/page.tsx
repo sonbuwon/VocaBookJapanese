@@ -19,11 +19,14 @@ export default async function Home() {
     console.error('Supabase 연결 오류:', e)
   }
 
+  const isAdmin = user?.app_metadata?.role === 'admin'
+
   return (
     <AppShell
       initialWordSets={wordSets}
       initialSentSets={sentSets}
       userEmail={user?.email ?? ''}
+      isAdmin={isAdmin}
     />
   )
 }
