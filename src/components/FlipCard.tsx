@@ -8,14 +8,16 @@ interface FlipCardProps {
   studyType: StudyType
   isFlipped: boolean
   onFlip: () => void
+  isFavorited?: boolean
+  onToggleFavorite?: () => void
 }
 
-export default function FlipCard({ word, studyType, isFlipped, onFlip }: FlipCardProps) {
+export default function FlipCard({ word, studyType, isFlipped, onFlip, isFavorited, onToggleFavorite }: FlipCardProps) {
   const isSent = studyType === 'sent'
 
   return (
     <div
-      style={{ width: '100%', perspective: '1000px', cursor: 'pointer', userSelect: 'none' }}
+      style={{ width: '100%', perspective: '1000px', cursor: 'pointer', userSelect: 'none', position: 'relative' }}
       onClick={onFlip}
     >
       <div className={`flipper${isFlipped ? ' flipped' : ''}`}>
@@ -58,6 +60,30 @@ export default function FlipCard({ word, studyType, isFlipped, onFlip }: FlipCar
           )}
         </div>
       </div>
+
+      {/* 즐겨찾기 버튼 — 카드 위에 오버레이 */}
+      {onToggleFavorite && (
+        <button
+          onClick={e => { e.stopPropagation(); onToggleFavorite() }}
+          title={isFavorited ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+          style={{
+            position: 'absolute',
+            top: '14px',
+            right: '14px',
+            zIndex: 10,
+            background: 'none',
+            border: 'none',
+            fontSize: '1.6rem',
+            lineHeight: 1,
+            cursor: 'pointer',
+            color: isFavorited ? '#f6ad55' : 'rgba(0,0,0,0.18)',
+            transition: 'color 0.15s, transform 0.1s',
+            padding: '4px',
+          }}
+        >
+          {isFavorited ? '★' : '☆'}
+        </button>
+      )}
     </div>
   )
 }

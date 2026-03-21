@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import type { Word, StudyType, CardMode } from '@/types'
 import { shuffle } from '@/lib/utils'
+import { getFavoriteWordIds, toggleFavorite } from '@/lib/favorites-client'
 import FlipCard from './FlipCard'
 
 interface StudyViewProps {
@@ -15,12 +16,19 @@ export default function StudyView({ words, studyType }: StudyViewProps) {
   const [deck, setDeck] = useState<Word[]>(words)
   const [current, setCurrent] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
+  const [favIds, setFavIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     setDeck(words)
     setCurrent(0)
     setIsFlipped(false)
     setModeState('saved')
+  }, [words])
+
+  // 현재 세트의 즐겨찾기 상태 로드
+  useEffect(() => {
+    if (words.length === 0) return
+    getFavoriteWordIds(words.map(w => w.id)).then(ids => setFavIds(new Set(ids)))
   }, [words])
 
   const setMode = (m: CardMode) => {
@@ -40,6 +48,16 @@ export default function StudyView({ words, studyType }: StudyViewProps) {
     }
     setCurrent(next)
     setIsFlipped(false)
+  }
+
+  const handleToggleFavorite = async (wordId: string) => {
+    const nowFav = await toggleFavorite(wordId)
+    setFavIds(prev => {
+      const next = new Set(prev)
+      if (nowFav) next.add(wordId)
+      else next.delete(wordId)
+      return next
+    })
   }
 
   const sortBtnBase: React.CSSProperties = {
@@ -94,6 +112,8 @@ export default function StudyView({ words, studyType }: StudyViewProps) {
             studyType={studyType}
             isFlipped={isFlipped}
             onFlip={() => setIsFlipped(f => !f)}
+            isFavorited={favIds.has(deck[current].id)}
+            onToggleFavorite={() => handleToggleFavorite(deck[current].id)}
           />
         ) : (
           <p style={{ color: 'var(--text-sub)', fontSize: '1rem', textAlign: 'center', padding: '60px 20px' }}>항목이 없습니다.</p>
