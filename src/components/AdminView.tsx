@@ -369,7 +369,7 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
                         </div>
                       )}
 
-                      {/* 단어 추가 폼 */}
+                      {/* 단어/문장 추가 폼 */}
                       <div style={{
                         borderTop: wordList.length > 0 ? '1px solid var(--border)' : 'none',
                         paddingTop: wordList.length > 0 ? '10px' : '0',
@@ -377,43 +377,84 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
                         <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-sub)', marginBottom: '7px' }}>
                           새 {label} 추가
                         </div>
-                        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                          <input
-                            value={wordForm.jp}
-                            onChange={e => updateWordForm(set.id, 'jp', e.target.value)}
-                            placeholder="일본어"
-                            style={wordInputStyle}
-                          />
-                          <input
-                            value={wordForm.hira}
-                            onChange={e => updateWordForm(set.id, 'hira', e.target.value)}
-                            placeholder="히라가나"
-                            style={wordInputStyle}
-                          />
-                          <input
-                            value={wordForm.ko}
-                            onChange={e => updateWordForm(set.id, 'ko', e.target.value)}
-                            placeholder="한국어"
-                            onKeyDown={e => { if (e.key === 'Enter') handleAddWord(set.id) }}
-                            style={wordInputStyle}
-                          />
-                          <button
-                            onClick={() => handleAddWord(set.id)}
-                            disabled={isPending || !canAddWord}
-                            style={{
-                              padding: '8px 14px',
-                              background: 'var(--primary)',
-                              color: '#fff',
-                              border: 'none',
-                              borderRadius: '8px',
-                              fontSize: '0.85rem',
-                              fontWeight: 700,
-                              cursor: canAddWord ? 'pointer' : 'not-allowed',
-                              opacity: canAddWord ? 1 : 0.4,
-                              flexShrink: 0,
-                            }}
-                          >추가</button>
-                        </div>
+                        {tab === 'sent' ? (
+                          /* 문장: 각 입력란을 한 줄씩 세로 배치 */
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <input
+                              value={wordForm.jp}
+                              onChange={e => updateWordForm(set.id, 'jp', e.target.value)}
+                              placeholder="일본어 문장"
+                              style={sentInputStyle}
+                            />
+                            <input
+                              value={wordForm.hira}
+                              onChange={e => updateWordForm(set.id, 'hira', e.target.value)}
+                              placeholder="히라가나"
+                              style={sentInputStyle}
+                            />
+                            <input
+                              value={wordForm.ko}
+                              onChange={e => updateWordForm(set.id, 'ko', e.target.value)}
+                              placeholder="한국어 번역"
+                              onKeyDown={e => { if (e.key === 'Enter') handleAddWord(set.id) }}
+                              style={sentInputStyle}
+                            />
+                            <button
+                              onClick={() => handleAddWord(set.id)}
+                              disabled={isPending || !canAddWord}
+                              style={{
+                                padding: '9px',
+                                background: 'var(--primary)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontSize: '0.88rem',
+                                fontWeight: 700,
+                                cursor: canAddWord ? 'pointer' : 'not-allowed',
+                                opacity: canAddWord ? 1 : 0.4,
+                              }}
+                            >추가</button>
+                          </div>
+                        ) : (
+                          /* 단어: 기존 가로 배치 */
+                          <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                            <input
+                              value={wordForm.jp}
+                              onChange={e => updateWordForm(set.id, 'jp', e.target.value)}
+                              placeholder="일본어"
+                              style={wordInputStyle}
+                            />
+                            <input
+                              value={wordForm.hira}
+                              onChange={e => updateWordForm(set.id, 'hira', e.target.value)}
+                              placeholder="히라가나"
+                              style={wordInputStyle}
+                            />
+                            <input
+                              value={wordForm.ko}
+                              onChange={e => updateWordForm(set.id, 'ko', e.target.value)}
+                              placeholder="한국어"
+                              onKeyDown={e => { if (e.key === 'Enter') handleAddWord(set.id) }}
+                              style={wordInputStyle}
+                            />
+                            <button
+                              onClick={() => handleAddWord(set.id)}
+                              disabled={isPending || !canAddWord}
+                              style={{
+                                padding: '8px 14px',
+                                background: 'var(--primary)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '8px',
+                                fontSize: '0.85rem',
+                                fontWeight: 700,
+                                cursor: canAddWord ? 'pointer' : 'not-allowed',
+                                opacity: canAddWord ? 1 : 0.4,
+                                flexShrink: 0,
+                              }}
+                            >추가</button>
+                          </div>
+                        )}
                       </div>
                     </>
                   )}
@@ -539,6 +580,18 @@ const wordInputStyle: React.CSSProperties = {
   outline: 'none',
   color: 'var(--text)',
   background: '#fff',
+}
+
+const sentInputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '8px 10px',
+  border: '1.5px solid var(--border)',
+  borderRadius: '7px',
+  fontSize: '0.9rem',
+  outline: 'none',
+  color: 'var(--text)',
+  background: '#fff',
+  boxSizing: 'border-box',
 }
 
 const iconBtn: React.CSSProperties = {
