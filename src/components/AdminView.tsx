@@ -64,7 +64,7 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
       .from('words')
       .select('*')
       .eq('set_id', setId)
-      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false })
     return data ?? []
   }
 
@@ -313,67 +313,8 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
                     <div style={{ textAlign: 'center', padding: '16px', color: 'var(--text-sub)', fontSize: '0.85rem' }}>로딩 중...</div>
                   ) : (
                     <>
-                      {/* 단어 목록 */}
-                      {wordList.length === 0 ? (
-                        <p style={{ fontSize: '0.82rem', color: 'var(--text-sub)', textAlign: 'center', padding: '8px 0 12px' }}>
-                          {label}이 없습니다. 아래에서 추가하세요.
-                        </p>
-                      ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '12px' }}>
-                          {wordList.map(word => (
-                            <div key={word.id}>
-                              {editingWordId === word.id ? (
-                                <div style={{
-                                  display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'center',
-                                  padding: '8px', background: 'var(--card-bg)', borderRadius: '9px',
-                                  border: '1.5px solid var(--primary)',
-                                }}>
-                                  <input
-                                    value={editingWordData.jp}
-                                    onChange={e => setEditingWordData(p => ({ ...p, jp: e.target.value }))}
-                                    placeholder="일본어"
-                                    style={wordInputStyle}
-                                  />
-                                  <input
-                                    value={editingWordData.hira}
-                                    onChange={e => setEditingWordData(p => ({ ...p, hira: e.target.value }))}
-                                    placeholder="히라가나"
-                                    style={wordInputStyle}
-                                  />
-                                  <input
-                                    value={editingWordData.ko}
-                                    onChange={e => setEditingWordData(p => ({ ...p, ko: e.target.value }))}
-                                    placeholder="한국어"
-                                    style={wordInputStyle}
-                                  />
-                                  <button onClick={() => handleEditWordSave(set.id, word.id)} disabled={isPending} style={chipBtn('green')}>저장</button>
-                                  <button onClick={() => setEditingWordId(null)} style={chipBtn('gray')}>취소</button>
-                                </div>
-                              ) : (
-                                <div style={{
-                                  display: 'flex', alignItems: 'center', gap: '8px',
-                                  padding: '7px 10px', background: 'var(--card-bg)', borderRadius: '9px',
-                                  border: '1px solid var(--border)',
-                                }}>
-                                  <div style={{ flex: 1, display: 'flex', gap: '8px', flexWrap: 'wrap', minWidth: 0 }}>
-                                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text)' }}>{word.jp}</span>
-                                    <span style={{ fontSize: '0.85rem', color: 'var(--primary)' }}>{word.hira}</span>
-                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-sub)' }}>{word.ko}</span>
-                                  </div>
-                                  <button onClick={() => handleEditWordStart(word)} title="수정" style={iconBtn}>✎</button>
-                                  <button onClick={() => handleDeleteWord(set.id, word.id)} title="삭제" style={{ ...iconBtn, color: '#e53e3e' }}>✕</button>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* 단어/문장 추가 폼 */}
-                      <div style={{
-                        borderTop: wordList.length > 0 ? '1px solid var(--border)' : 'none',
-                        paddingTop: wordList.length > 0 ? '10px' : '0',
-                      }}>
+                      {/* 단어/문장 추가 폼 — 목록 위에 배치 */}
+                      <div style={{ marginBottom: wordList.length > 0 ? '0' : '0' }}>
                         <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-sub)', marginBottom: '7px' }}>
                           새 {label} 추가
                         </div>
@@ -416,7 +357,7 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
                             >추가</button>
                           </div>
                         ) : (
-                          /* 단어: 기존 가로 배치 */
+                          /* 단어: 가로 배치 */
                           <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                             <input
                               value={wordForm.jp}
@@ -456,6 +397,60 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
                           </div>
                         )}
                       </div>
+
+                      {/* 단어 목록 — 추가 폼 아래 배치, 최근 추가순 */}
+                      {wordList.length > 0 && (
+                        <div style={{ borderTop: '1px solid var(--border)', marginTop: '10px', paddingTop: '10px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                            {wordList.map(word => (
+                              <div key={word.id}>
+                                {editingWordId === word.id ? (
+                                  <div style={{
+                                    display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'center',
+                                    padding: '8px', background: 'var(--card-bg)', borderRadius: '9px',
+                                    border: '1.5px solid var(--primary)',
+                                  }}>
+                                    <input
+                                      value={editingWordData.jp}
+                                      onChange={e => setEditingWordData(p => ({ ...p, jp: e.target.value }))}
+                                      placeholder="일본어"
+                                      style={wordInputStyle}
+                                    />
+                                    <input
+                                      value={editingWordData.hira}
+                                      onChange={e => setEditingWordData(p => ({ ...p, hira: e.target.value }))}
+                                      placeholder="히라가나"
+                                      style={wordInputStyle}
+                                    />
+                                    <input
+                                      value={editingWordData.ko}
+                                      onChange={e => setEditingWordData(p => ({ ...p, ko: e.target.value }))}
+                                      placeholder="한국어"
+                                      style={wordInputStyle}
+                                    />
+                                    <button onClick={() => handleEditWordSave(set.id, word.id)} disabled={isPending} style={chipBtn('green')}>저장</button>
+                                    <button onClick={() => setEditingWordId(null)} style={chipBtn('gray')}>취소</button>
+                                  </div>
+                                ) : (
+                                  <div style={{
+                                    display: 'flex', alignItems: 'center', gap: '8px',
+                                    padding: '7px 10px', background: 'var(--card-bg)', borderRadius: '9px',
+                                    border: '1px solid var(--border)',
+                                  }}>
+                                    <div style={{ flex: 1, display: 'flex', gap: '8px', flexWrap: 'wrap', minWidth: 0 }}>
+                                      <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text)' }}>{word.jp}</span>
+                                      <span style={{ fontSize: '0.85rem', color: 'var(--primary)' }}>{word.hira}</span>
+                                      <span style={{ fontSize: '0.85rem', color: 'var(--text-sub)' }}>{word.ko}</span>
+                                    </div>
+                                    <button onClick={() => handleEditWordStart(word)} title="수정" style={iconBtn}>✎</button>
+                                    <button onClick={() => handleDeleteWord(set.id, word.id)} title="삭제" style={{ ...iconBtn, color: '#e53e3e' }}>✕</button>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
