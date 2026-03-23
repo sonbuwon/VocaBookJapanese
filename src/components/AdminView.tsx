@@ -39,6 +39,8 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
 
   // 단어 추가 폼: setId → {jp, hira, ko}
   const [addWordData, setAddWordData] = useState<Record<string, WordForm>>({})
+  // 중복 에러: setId → 에러 메시지
+  const [dupError, setDupError] = useState<Record<string, string>>({})
 
   // 단어 인라인 수정
   const [editingWordId, setEditingWordId] = useState<string | null>(null)
@@ -124,11 +126,29 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
       ...prev,
       [setId]: { ...(prev[setId] ?? { jp: '', hira: '', ko: '' }), [field]: value },
     }))
+    // jp 또는 hira 수정 시 에러 초기화
+    if (field === 'jp' || field === 'hira') {
+      setDupError(prev => ({ ...prev, [setId]: '' }))
+    }
   }
 
   const handleAddWord = (setId: string) => {
     const form = addWordData[setId]
     if (!form?.jp?.trim() || !form?.hira?.trim() || !form?.ko?.trim()) return
+
+    // 중복 체크: 같은 세트 내 jp + hira 조합
+    const wordList = Array.isArray(expanded[setId]) ? (expanded[setId] as Word[]) : []
+    const jpNorm = form.jp.trim()
+    const hiraNorm = form.hira.trim()
+    const isDup = wordList.some(
+      w => w.jp.trim() === jpNorm && w.hira.trim() === hiraNorm
+    )
+    if (isDup) {
+      setDupError(prev => ({ ...prev, [setId]: '이미 존재하는 단어입니다.' }))
+      return
+    }
+
+    setDupError(prev => ({ ...prev, [setId]: '' }))
     startTransition(async () => {
       await addWord(setId, form.jp, form.hira, form.ko)
       await reloadWords(setId)
@@ -325,13 +345,13 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
                               value={wordForm.jp}
                               onChange={e => updateWordForm(set.id, 'jp', e.target.value)}
                               placeholder="일본어 문장"
-                              style={sentInputStyle}
+                              style={dupError[set.id] ? { ...sentInputStyle, borderColor: '#e53e3e' } : sentInputStyle}
                             />
                             <input
                               value={wordForm.hira}
                               onChange={e => updateWordForm(set.id, 'hira', e.target.value)}
                               placeholder="히라가나"
-                              style={sentInputStyle}
+                              style={dupError[set.id] ? { ...sentInputStyle, borderColor: '#e53e3e' } : sentInputStyle}
                             />
                             <input
                               value={wordForm.ko}
@@ -355,45 +375,57 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
                                 opacity: canAddWord ? 1 : 0.4,
                               }}
                             >추가</button>
+                            {dupError[set.id] && (
+                              <div style={{ fontSize: '0.78rem', color: '#e53e3e', marginTop: '2px' }}>
+                                {dupError[set.id]}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           /* 단어: 가로 배치 */
-                          <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                            <input
-                              value={wordForm.jp}
-                              onChange={e => updateWordForm(set.id, 'jp', e.target.value)}
-                              placeholder="일본어"
-                              style={wordInputStyle}
-                            />
-                            <input
-                              value={wordForm.hira}
-                              onChange={e => updateWordForm(set.id, 'hira', e.target.value)}
-                              placeholder="히라가나"
-                              style={wordInputStyle}
-                            />
-                            <input
-                              value={wordForm.ko}
-                              onChange={e => updateWordForm(set.id, 'ko', e.target.value)}
-                              placeholder="한국어"
-                              onKeyDown={e => { if (e.key === 'Enter') handleAddWord(set.id) }}
-                              style={wordInputStyle}
-                            />
-                            <button
-                              onClick={() => handleAddWord(set.id)}
-                              disabled={isPending || !canAddWord}
-                              style={{
-                                padding: '8px 14px',
-                                background: 'var(--primary)',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontSize: '0.85rem',
-                                fontWeight: 700,
-                                cursor: canAddWord ? 'pointer' : 'not-allowed',
-                                opacity: canAddWord ? 1 : 0.4,
-                                flexShrink: 0,
-                              }}
-                            >추가</button>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                              <input
+                                value={wordForm.jp}
+                                onChange={e => updateWordForm(set.id, 'jp', e.target.value)}
+                                placeholder="일본어"
+                                style={dupError[set.id] ? { ...wordInputStyle, borderColor: '#e53e3e' } : wordInputStyle}
+                              />
+                              <input
+                                value={wordForm.hira}
+                                onChange={e => updateWordForm(set.id, 'hira', e.target.value)}
+                                placeholder="히라가나"
+                                style={dupError[set.id] ? { ...wordInputStyle, borderColor: '#e53e3e' } : wordInputStyle}
+                              />
+                              <input
+                                value={wordForm.ko}
+                                onChange={e => updateWordForm(set.id, 'ko', e.target.value)}
+                                placeholder="한국어"
+                                onKeyDown={e => { if (e.key === 'Enter') handleAddWord(set.id) }}
+                                style={wordInputStyle}
+                              />
+                              <button
+                                onClick={() => handleAddWord(set.id)}
+                                disabled={isPending || !canAddWord}
+                                style={{
+                                  padding: '8px 14px',
+                                  background: 'var(--primary)',
+                                  color: '#fff',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  fontSize: '0.85rem',
+                                  fontWeight: 700,
+                                  cursor: canAddWord ? 'pointer' : 'not-allowed',
+                                  opacity: canAddWord ? 1 : 0.4,
+                                  flexShrink: 0,
+                                }}
+                              >추가</button>
+                            </div>
+                            {dupError[set.id] && (
+                              <div style={{ fontSize: '0.78rem', color: '#e53e3e' }}>
+                                {dupError[set.id]}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
