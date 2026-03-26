@@ -438,7 +438,8 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
                               <div key={word.id}>
                                 {editingWordId === word.id ? (
                                   <div style={{
-                                    display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'center',
+                                    display: 'flex', flexDirection: tab === 'sent' ? 'column' : 'row',
+                                    gap: '5px', flexWrap: tab === 'sent' ? 'nowrap' : 'wrap', alignItems: tab === 'sent' ? 'stretch' : 'center',
                                     padding: '8px', background: 'var(--card-bg)', borderRadius: '9px',
                                     border: '1.5px solid var(--primary)',
                                   }}>
@@ -446,22 +447,24 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
                                       value={editingWordData.jp}
                                       onChange={e => setEditingWordData(p => ({ ...p, jp: e.target.value }))}
                                       placeholder="일본어"
-                                      style={wordInputStyle}
+                                      style={tab === 'sent' ? sentInputStyle : wordInputStyle}
                                     />
                                     <input
                                       value={editingWordData.hira}
                                       onChange={e => setEditingWordData(p => ({ ...p, hira: e.target.value }))}
                                       placeholder="히라가나"
-                                      style={wordInputStyle}
+                                      style={tab === 'sent' ? sentInputStyle : wordInputStyle}
                                     />
                                     <input
                                       value={editingWordData.ko}
                                       onChange={e => setEditingWordData(p => ({ ...p, ko: e.target.value }))}
                                       placeholder="한국어"
-                                      style={wordInputStyle}
+                                      style={tab === 'sent' ? sentInputStyle : wordInputStyle}
                                     />
-                                    <button onClick={() => handleEditWordSave(set.id, word.id)} disabled={isPending} style={chipBtn('green')}>저장</button>
-                                    <button onClick={() => setEditingWordId(null)} style={chipBtn('gray')}>취소</button>
+                                    <div style={{ display: 'flex', gap: '5px' }}>
+                                      <button onClick={() => handleEditWordSave(set.id, word.id)} disabled={isPending} style={chipBtn('green')}>저장</button>
+                                      <button onClick={() => setEditingWordId(null)} style={chipBtn('gray')}>취소</button>
+                                    </div>
                                   </div>
                                 ) : (
                                   <div style={{
