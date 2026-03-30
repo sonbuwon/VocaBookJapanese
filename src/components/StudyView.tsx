@@ -5,6 +5,7 @@ import type { Word, StudyType, CardMode } from '@/types'
 import { shuffle } from '@/lib/utils'
 import { getFavoriteWordIds, toggleFavorite } from '@/lib/favorites-client'
 import FlipCard from './FlipCard'
+import DictationCanvas from './DictationCanvas'
 
 interface StudyViewProps {
   words: Word[]
@@ -17,6 +18,7 @@ export default function StudyView({ words, studyType }: StudyViewProps) {
   const [current, setCurrent] = useState(0)
   const [isFlipped, setIsFlipped] = useState(false)
   const [favIds, setFavIds] = useState<Set<string>>(new Set())
+  const [dictationOpen, setDictationOpen] = useState(false)
 
   useEffect(() => {
     setDeck(words)
@@ -48,6 +50,7 @@ export default function StudyView({ words, studyType }: StudyViewProps) {
     }
     setCurrent(next)
     setIsFlipped(false)
+    setDictationOpen(false)
   }
 
   const handleToggleFavorite = async (wordId: string) => {
@@ -105,16 +108,27 @@ export default function StudyView({ words, studyType }: StudyViewProps) {
       </div>
 
       {/* 카드 영역 */}
-      <div style={{ flex: 1, width: '100%', maxWidth: '480px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '18px 16px 10px' }}>
+      <div style={{ width: '100%', maxWidth: '480px', display: 'flex', flexDirection: 'column', alignItems: 'stretch', padding: '18px 16px 10px' }}>
         {deck.length > 0 ? (
-          <FlipCard
-            word={deck[current]}
-            studyType={studyType}
-            isFlipped={isFlipped}
-            onFlip={() => setIsFlipped(f => !f)}
-            isFavorited={favIds.has(deck[current].id)}
-            onToggleFavorite={() => handleToggleFavorite(deck[current].id)}
-          />
+          <>
+            <FlipCard
+              word={deck[current]}
+              studyType={studyType}
+              isFlipped={isFlipped}
+              onFlip={() => setIsFlipped(f => !f)}
+              isFavorited={favIds.has(deck[current].id)}
+              onToggleFavorite={() => handleToggleFavorite(deck[current].id)}
+              onDictation={() => setDictationOpen(o => !o)}
+            />
+            {dictationOpen && (
+              <DictationCanvas
+                key={`${deck[current].id}-${current}`}
+                jp={deck[current].jp}
+                studyType={studyType}
+                onClose={() => setDictationOpen(false)}
+              />
+            )}
+          </>
         ) : (
           <p style={{ color: 'var(--text-sub)', fontSize: '1rem', textAlign: 'center', padding: '60px 20px' }}>항목이 없습니다.</p>
         )}

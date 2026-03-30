@@ -10,9 +10,10 @@ interface FlipCardProps {
   onFlip: () => void
   isFavorited?: boolean
   onToggleFavorite?: () => void
+  onDictation?: () => void
 }
 
-export default function FlipCard({ word, studyType, isFlipped, onFlip, isFavorited, onToggleFavorite }: FlipCardProps) {
+export default function FlipCard({ word, studyType, isFlipped, onFlip, isFavorited, onToggleFavorite, onDictation }: FlipCardProps) {
   const isSent = studyType === 'sent'
 
   return (
@@ -59,6 +60,30 @@ export default function FlipCard({ word, studyType, isFlipped, onFlip, isFavorit
           </div>
           <SpeakButton hira={word.hira} />
           <div style={{ fontSize: '0.78rem', color: '#aaa', marginTop: '8px' }}>탭해서 뜻 확인</div>
+          {onDictation && (
+            <button
+              onClick={e => { e.stopPropagation(); onDictation() }}
+              title="받아쓰기"
+              style={{
+                position: 'absolute',
+                bottom: '14px',
+                right: '14px',
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                border: '1.5px solid var(--border)',
+                background: 'var(--btn-bg)',
+                color: 'var(--text-sub)',
+                fontSize: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              ✏️
+            </button>
+          )}
         </div>
 
         {/* 뒷면 */}
