@@ -7,9 +7,11 @@ interface HeaderProps {
   showBack: boolean
   onBack: () => void
   showLogout?: boolean
+  showHome?: boolean
+  onHome?: () => void
 }
 
-export default function Header({ title, showBack, onBack, showLogout }: HeaderProps) {
+export default function Header({ title, showBack, onBack, showLogout, showHome, onHome }: HeaderProps) {
   return (
     <header style={{
       width: '100%',
@@ -67,6 +69,26 @@ export default function Header({ title, showBack, onBack, showLogout }: HeaderPr
             로그아웃
           </button>
         </form>
+      )}
+      {showHome && (
+        <button
+          onClick={onHome}
+          title="홈으로"
+          style={{
+            position: 'absolute',
+            right: '14px',
+            background: 'rgba(255,255,255,0.18)',
+            border: 'none',
+            color: '#fff',
+            fontSize: '1.0rem',
+            cursor: 'pointer',
+            lineHeight: 1,
+            padding: '6px 10px',
+            borderRadius: '6px',
+          }}
+        >
+          home
+        </button>
       )}
     </header>
   )

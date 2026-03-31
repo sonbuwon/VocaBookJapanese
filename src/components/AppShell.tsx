@@ -84,6 +84,8 @@ export default function AppShell({ initialWordSets, initialSentSets, userEmail, 
         showBack={appScreen !== 'menu'}
         onBack={goBack}
         showLogout={appScreen === 'menu'}
+        showHome={appScreen !== 'menu'}
+        onHome={() => setAppScreen('menu')}
       />
 
       {appScreen === 'menu' && (
