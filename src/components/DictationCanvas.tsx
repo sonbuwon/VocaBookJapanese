@@ -101,15 +101,18 @@ export default function DictationCanvas({ jp, studyType, onClose }: Props) {
   const isSent = studyType === 'sent'
 
   const btnStyle = (active: boolean): React.CSSProperties => ({
-    padding: '7px 16px',
-    borderRadius: '8px',
+    width: '38px',
+    height: '38px',
+    borderRadius: '50%',
     border: '1.5px solid',
     borderColor: active ? 'var(--primary)' : 'var(--border)',
     background: active ? 'var(--primary)' : 'transparent',
     color: active ? '#fff' : 'var(--text)',
-    fontWeight: 600,
-    fontSize: '0.82rem',
+    fontSize: '1.1rem',
     cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   })
 
   return (
@@ -169,13 +172,14 @@ export default function DictationCanvas({ jp, studyType, onClose }: Props) {
         alignItems: 'center',
         flexWrap: 'wrap',
       }}>
-        <button onClick={() => setTool('pen')} style={btnStyle(tool === 'pen')}>✏️ 펜</button>
-        <button onClick={() => setTool('eraser')} style={btnStyle(tool === 'eraser')}>🧹 지우개</button>
-        <button onClick={clearCanvas} style={btnStyle(false)}>전체 지우기</button>
+        <button onClick={() => setTool('pen')} style={btnStyle(tool === 'pen')} title="펜">✏️</button>
+        <button onClick={() => setTool('eraser')} style={btnStyle(tool === 'eraser')} title="지우개">🧹</button>
+        <button onClick={clearCanvas} style={btnStyle(false)} title="전체 지우기">🗑️</button>
         <button
           onClick={onClose}
-          style={{ ...btnStyle(false), marginLeft: 'auto', color: 'var(--text-sub)' }}
-        >닫기</button>
+          style={{ ...btnStyle(false), marginLeft: 'auto' }}
+          title="닫기"
+        >✕</button>
       </div>
     </div>
   )

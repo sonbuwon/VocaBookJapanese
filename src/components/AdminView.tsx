@@ -10,6 +10,7 @@ import {
   deleteSet,
   swapSetOrder,
   addWord,
+  addWords,
   updateWord,
   deleteWord,
 } from '@/app/admin/actions'
@@ -41,6 +42,11 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
   const [addWordData, setAddWordData] = useState<Record<string, WordForm>>({})
   // 중복 에러: setId → 에러 메시지
   const [dupError, setDupError] = useState<Record<string, string>>({})
+
+  // CSV 일괄 추가
+  const [csvOpen, setCsvOpen] = useState<Record<string, boolean>>({})
+  const [csvText, setCsvText] = useState<Record<string, string>>({})
+  const [csvResult, setCsvResult] = useState<Record<string, string>>({})
 
   // 단어 인라인 수정
   const [editingWordId, setEditingWordId] = useState<string | null>(null)
@@ -168,6 +174,41 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
       await updateWord(wordId, editingWordData.jp, editingWordData.hira, editingWordData.ko)
       setEditingWordId(null)
       await reloadWords(setId)
+    })
+  }
+
+  // CSV 파싱: 유효 행 / 중복 / 형식 오류 분류
+  const parseCsv = (text: string, wordList: Word[]) => {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+    const valid: { jp: string; hira: string; ko: string }[] = []
+    let duplicates = 0
+    let invalid = 0
+    for (const line of lines) {
+      const parts = line.split(/,|\t/).map(p => p.trim())
+      if (parts.length !== 3 || parts.some(p => !p)) { invalid++; continue }
+      const [jp, hira, ko] = parts
+      const isDup = wordList.some(w => w.jp.trim() === jp && w.hira.trim() === hira)
+      if (isDup) { duplicates++; continue }
+      valid.push({ jp, hira, ko })
+    }
+    return { valid, duplicates, invalid }
+  }
+
+  const handleCsvAdd = (setId: string) => {
+    const text = csvText[setId] ?? ''
+    const wordList = Array.isArray(expanded[setId]) ? (expanded[setId] as Word[]) : []
+    const { valid, duplicates, invalid } = parseCsv(text, wordList)
+    if (valid.length === 0) {
+      setCsvResult(prev => ({ ...prev, [setId]: `추가할 단어가 없습니다. (중복 ${duplicates}개, 형식오류 ${invalid}개)` }))
+      return
+    }
+    startTransition(async () => {
+      await addWords(setId, valid)
+      await reloadWords(setId)
+      setCsvText(prev => ({ ...prev, [setId]: '' }))
+      setCsvOpen(prev => ({ ...prev, [setId]: false }))
+      setCsvResult(prev => ({ ...prev, [setId]: `${valid.length}개 추가됨${duplicates ? ` · 중복 ${duplicates}개 스킵` : ''}${invalid ? ` · 형식오류 ${invalid}개 스킵` : ''}` }))
+      router.refresh()
     })
   }
 
@@ -335,9 +376,99 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
                     <>
                       {/* 단어/문장 추가 폼 — 목록 위에 배치 */}
                       <div style={{ marginBottom: wordList.length > 0 ? '0' : '0' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-sub)', marginBottom: '7px' }}>
-                          새 {label} 추가
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '7px' }}>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-sub)' }}>
+                            새 {label} 추가
+                          </div>
+                          <button
+                            onClick={() => {
+                              setCsvOpen(prev => ({ ...prev, [set.id]: !prev[set.id] }))
+                              setCsvResult(prev => ({ ...prev, [set.id]: '' }))
+                            }}
+                            style={{
+                              fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer',
+                              padding: '3px 10px', borderRadius: '6px',
+                              border: '1.5px solid var(--primary-light)',
+                              background: csvOpen[set.id] ? 'var(--primary)' : 'var(--btn-bg)',
+                              color: csvOpen[set.id] ? '#fff' : 'var(--primary)',
+                            }}
+                          >
+                            CSV 일괄 추가
+                          </button>
                         </div>
+
+                        {/* CSV 패널 */}
+                        {csvOpen[set.id] && (
+                          <div style={{
+                            marginBottom: '10px', padding: '12px',
+                            background: '#f8fdf9', borderRadius: '10px',
+                            border: '1.5px solid var(--primary-light)',
+                          }}>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-sub)', marginBottom: '6px', lineHeight: 1.6 }}>
+                              한 줄에 하나씩 <b>일본어,히라가나,한국어</b> 형식으로 입력<br />
+                              쉼표(,) 또는 탭으로 구분 · 중복(jp+hira)은 자동 스킵
+                            </div>
+                            <textarea
+                              value={csvText[set.id] ?? ''}
+                              onChange={e => setCsvText(prev => ({ ...prev, [set.id]: e.target.value }))}
+                              placeholder={'食べる,たべる,먹다\n飲む,のむ,마시다\n見る,みる,보다'}
+                              rows={6}
+                              style={{
+                                width: '100%', boxSizing: 'border-box',
+                                padding: '8px 10px',
+                                border: '1.5px solid var(--border)',
+                                borderRadius: '7px',
+                                fontSize: '0.82rem',
+                                fontFamily: 'monospace',
+                                resize: 'vertical',
+                                outline: 'none',
+                                color: 'var(--text)',
+                                background: '#fff',
+                                lineHeight: 1.6,
+                              }}
+                            />
+                            {/* 미리보기 */}
+                            {(() => {
+                              const text = csvText[set.id] ?? ''
+                              if (!text.trim()) return null
+                              const { valid, duplicates, invalid } = parseCsv(text, wordList)
+                              return (
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-sub)', margin: '6px 0 8px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                  <span style={{ color: 'var(--primary)', fontWeight: 600 }}>추가 예정 {valid.length}개</span>
+                                  {duplicates > 0 && <span style={{ color: '#d97706' }}>중복 스킵 {duplicates}개</span>}
+                                  {invalid > 0 && <span style={{ color: '#e53e3e' }}>형식오류 {invalid}개</span>}
+                                </div>
+                              )
+                            })()}
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button
+                                onClick={() => handleCsvAdd(set.id)}
+                                disabled={isPending || !(csvText[set.id] ?? '').trim()}
+                                style={{
+                                  padding: '7px 16px', background: 'var(--primary)', color: '#fff',
+                                  border: 'none', borderRadius: '7px', fontSize: '0.82rem',
+                                  fontWeight: 700, cursor: 'pointer',
+                                  opacity: (csvText[set.id] ?? '').trim() ? 1 : 0.4,
+                                }}
+                              >일괄 추가</button>
+                              <button
+                                onClick={() => { setCsvOpen(prev => ({ ...prev, [set.id]: false })); setCsvText(prev => ({ ...prev, [set.id]: '' })) }}
+                                style={{
+                                  padding: '7px 12px', background: 'transparent', color: 'var(--text-sub)',
+                                  border: '1.5px solid var(--border)', borderRadius: '7px',
+                                  fontSize: '0.82rem', cursor: 'pointer',
+                                }}
+                              >취소</button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 추가 결과 메시지 */}
+                        {csvResult[set.id] && (
+                          <div style={{ fontSize: '0.78rem', color: 'var(--primary)', marginBottom: '8px', fontWeight: 600 }}>
+                            {csvResult[set.id]}
+                          </div>
+                        )}
                         {tab === 'sent' ? (
                           /* 문장: 각 입력란을 한 줄씩 세로 배치 */
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

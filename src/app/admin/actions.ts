@@ -82,6 +82,37 @@ export async function swapSetOrder(
   return { success: true }
 }
 
+export async function addWords(
+  setId: string,
+  words: { jp: string; hira: string; ko: string }[],
+) {
+  if (words.length === 0) return { success: true, count: 0 }
+  const supabase = await createClient()
+
+  const { data: maxData } = await supabase
+    .from('words')
+    .select('sort_order')
+    .eq('set_id', setId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  const maxOrder = maxData?.[0]?.sort_order ?? 0
+
+  const rows = words.map((w, i) => ({
+    set_id: setId,
+    jp: w.jp.trim(),
+    hira: w.hira.trim(),
+    ko: w.ko.trim(),
+    sort_order: maxOrder + i + 1,
+  }))
+
+  const { error } = await supabase.from('words').insert(rows)
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin')
+  return { success: true, count: rows.length }
+}
+
 export async function addWord(setId: string, jp: string, hira: string, ko: string) {
   const supabase = await createClient()
 
