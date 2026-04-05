@@ -36,7 +36,7 @@ body {
 /* Flip animation */
 .flipper {
   width: 100%;
-  min-height: 240px;
+  min-height: 280px;
   position: relative;
   transform-style: preserve-3d;
   transition: transform 0.45s cubic-bezier(0.4, 0.2, 0.2, 1);
@@ -51,7 +51,7 @@ body {
   top: 0;
   left: 0;
   width: 100%;
-  min-height: 240px;
+  min-height: 280px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   border-radius: 18px;

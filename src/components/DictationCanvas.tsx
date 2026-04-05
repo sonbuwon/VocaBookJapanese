@@ -126,26 +126,6 @@ export default function DictationCanvas({ jp, studyType, onClose }: Props) {
     }}>
       {/* 캔버스 영역 */}
       <div style={{ position: 'relative', width: '100%', height: '220px', background: '#fafafa' }}>
-        {/* 가이드 텍스트 (회색 배경) */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: isSent ? '1.2rem' : '4.67rem',
-          fontWeight: 700,
-          color: 'rgba(0,0,0,0.07)',
-          userSelect: 'none',
-          pointerEvents: 'none',
-          padding: '12px',
-          textAlign: 'center',
-          wordBreak: 'break-all',
-          lineHeight: 1.3,
-          fontFamily: 'serif',
-        }}>
-          {jp}
-        </div>
         {/* 드로잉 캔버스 */}
         <canvas
           ref={canvasRef}
