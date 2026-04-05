@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import type { WordSet, Word, StudyType, AppScreen } from '@/types'
 import { getWords } from '@/lib/data-client'
 import { FAVORITES_SET_ID, getFavoritesCount, getFavoriteWords } from '@/lib/favorites-client'
+import { useInactivityLogout } from '@/lib/useInactivityLogout'
 import Header from './Header'
 import MenuView from './MenuView'
 import SetListView from './SetListView'
@@ -17,6 +18,8 @@ interface AppShellProps {
 }
 
 export default function AppShell({ initialWordSets, initialSentSets, userEmail, isAdmin }: AppShellProps) {
+  useInactivityLogout()
+
   const [appScreen, setAppScreen] = useState<AppScreen>('menu')
   const [studyType, setStudyType] = useState<StudyType>('word')
   const [currentSetId, setCurrentSetId] = useState<string | null>(null)
