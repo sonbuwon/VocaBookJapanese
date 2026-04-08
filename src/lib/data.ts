@@ -25,6 +25,7 @@ export async function getWords(setId: string): Promise<Word[]> {
     .select('*')
     .eq('set_id', setId)
     .order('sort_order', { ascending: true })
+    .limit(10000)
 
   if (error) throw new Error(error.message)
   return data ?? []

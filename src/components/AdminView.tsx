@@ -73,6 +73,7 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
       .select('*')
       .eq('set_id', setId)
       .order('created_at', { ascending: false })
+      .limit(10000)
     return data ?? []
   }
 
