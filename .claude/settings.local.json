@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /d/Buwon_Room/Projects/VocaBook2/src/components/*.tsx)"
+    ]
+  }
+}

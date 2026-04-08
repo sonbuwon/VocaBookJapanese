@@ -7,12 +7,13 @@ interface MenuViewProps {
   wordCount: number
   sentSetCount: number
   sentCount: number
+  dialogSetCount: number
   onSelect: (type: StudyType) => void
   isAdmin: boolean
 }
 
 export default function MenuView({
-  wordSetCount, wordCount, sentSetCount, sentCount, onSelect, isAdmin
+  wordSetCount, wordCount, sentSetCount, sentCount, dialogSetCount, onSelect, isAdmin
 }: MenuViewProps) {
   const menuBtnStyle: React.CSSProperties = {
     background: 'var(--card-bg)',
@@ -78,6 +79,28 @@ export default function MenuView({
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>문장 외우기</div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>{sentSetCount}개 세트 · {sentCount}개 문장</div>
+        </div>
+        <div style={{ fontSize: '1.2rem', color: 'var(--primary-light)' }}>›</div>
+      </div>
+
+      <div
+        style={menuBtnStyle}
+        onClick={() => onSelect('dialog')}
+        onMouseDown={e => {
+          const el = e.currentTarget as HTMLElement
+          el.style.borderColor = 'var(--primary-light)'
+          el.style.boxShadow = '0 4px 20px rgba(45,106,79,0.15)'
+        }}
+        onMouseUp={e => {
+          const el = e.currentTarget as HTMLElement
+          el.style.borderColor = 'transparent'
+          el.style.boxShadow = '0 2px 12px var(--shadow)'
+        }}
+      >
+        <div style={{ fontSize: '2.2rem', fontWeight: 700, color: 'var(--primary)', width: '52px', textAlign: 'center', flexShrink: 0 }}>会</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>대화 스크립트</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>{dialogSetCount}개 세트</div>
         </div>
         <div style={{ fontSize: '1.2rem', color: 'var(--primary-light)' }}>›</div>
       </div>

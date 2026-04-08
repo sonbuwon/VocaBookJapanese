@@ -14,18 +14,20 @@ import {
   updateWord,
   deleteWord,
 } from '@/app/admin/actions'
+import DialogAdminPanel from './DialogAdminPanel'
 
 interface AdminViewProps {
   wordSets: WordSet[]
   sentSets: WordSet[]
+  dialogSets: WordSet[]
 }
 
 type WordForm = { jp: string; hira: string; ko: string }
 
-export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
+export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [tab, setTab] = useState<StudyType>('word')
+  const [tab, setTab] = useState<StudyType | 'dialog'>('word')
 
   // 펼쳐진 세트: setId → Word[] | 'loading'
   const [expanded, setExpanded] = useState<Record<string, Word[] | 'loading'>>({})
@@ -54,6 +56,7 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
 
   const sets = tab === 'word' ? wordSets : sentSets
   const label = tab === 'word' ? '단어' : '문장'
+  const isDialogTab = tab === 'dialog'
 
   // --- 단어 로드 ---
   const toggleExpand = async (setId: string) => {
@@ -251,7 +254,7 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
 
       {/* 탭 */}
       <div style={{ display: 'flex', background: 'var(--card-bg)', borderBottom: '2px solid var(--border)', flexShrink: 0 }}>
-        {(['word', 'sent'] as StudyType[]).map(t => (
+        {(['word', 'sent', 'dialog'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -262,19 +265,24 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
               border: 'none',
               borderBottom: tab === t ? '2px solid var(--primary)' : '2px solid transparent',
               marginBottom: '-2px',
-              fontSize: '0.95rem',
+              fontSize: '0.85rem',
               fontWeight: tab === t ? 700 : 400,
               color: tab === t ? 'var(--primary)' : 'var(--text-sub)',
               cursor: 'pointer',
             }}
           >
-            {t === 'word' ? '단어 세트' : '문장 세트'}
+            {t === 'word' ? '단어 세트' : t === 'sent' ? '문장 세트' : '대화 세트'}
           </button>
         ))}
       </div>
 
-      {/* 세트 목록 */}
-      <div style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto' }}>
+      {/* 대화 탭 */}
+      {isDialogTab && (
+        <DialogAdminPanel dialogSets={dialogSets} />
+      )}
+
+      {/* 세트 목록 (단어/문장) */}
+      {!isDialogTab && <div style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto' }}>
 
         {sets.length === 0 && (
           <p style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-sub)', fontSize: '0.9rem' }}>
@@ -693,7 +701,7 @@ export default function AdminView({ wordSets, sentSets }: AdminViewProps) {
         )}
 
         <div style={{ height: '16px' }} />
-      </div>
+      </div>}
     </div>
   )
 }

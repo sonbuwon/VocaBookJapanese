@@ -1,4 +1,4 @@
-import { getSets } from '@/lib/data'
+import { getSets, getDialogSets } from '@/lib/data'
 import { createClient } from '@/lib/supabase/server'
 import AppShell from '@/components/AppShell'
 import type { WordSet } from '@/types'
@@ -9,11 +9,13 @@ export default async function Home() {
 
   let wordSets: WordSet[] = []
   let sentSets: WordSet[] = []
+  let dialogSets: WordSet[] = []
 
   try {
-    [wordSets, sentSets] = await Promise.all([
+    [wordSets, sentSets, dialogSets] = await Promise.all([
       getSets('word'),
       getSets('sent'),
+      getDialogSets(),
     ])
   } catch (e) {
     console.error('Supabase 연결 오류:', e)
@@ -25,6 +27,7 @@ export default async function Home() {
     <AppShell
       initialWordSets={wordSets}
       initialSentSets={sentSets}
+      initialDialogSets={dialogSets}
       userEmail={user?.email ?? ''}
       isAdmin={isAdmin}
     />

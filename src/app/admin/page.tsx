@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { getSets } from '@/lib/data'
+import { getSets, getDialogSets } from '@/lib/data'
 import AdminView from '@/components/AdminView'
 
 export default async function AdminPage() {
@@ -10,14 +10,15 @@ export default async function AdminPage() {
   if (!user) redirect('/login')
   if (user.app_metadata?.role !== 'admin') redirect('/')
 
-  const [wordSets, sentSets] = await Promise.all([
+  const [wordSets, sentSets, dialogSets] = await Promise.all([
     getSets('word'),
     getSets('sent'),
+    getDialogSets(),
   ])
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-      <AdminView wordSets={wordSets} sentSets={sentSets} />
+      <AdminView wordSets={wordSets} sentSets={sentSets} dialogSets={dialogSets} />
     </div>
   )
 }

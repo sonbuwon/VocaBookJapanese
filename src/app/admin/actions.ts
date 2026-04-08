@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { StudyType } from '@/types'
+import type { StudyType, DialogLine, DialogVocab, DialogExpression } from '@/types'
 
 export async function createSet(name: string, type: StudyType) {
   const supabase = await createClient()
@@ -159,6 +159,153 @@ export async function deleteWord(wordId: string) {
 
   if (error) return { error: error.message }
 
+  revalidatePath('/admin')
+  return { success: true }
+}
+
+// ─── 대화 스크립트 어드민 액션 ───────────────────────────────────────────────
+
+type DialogLineInput = { speaker: 'A' | 'B'; jp: string; hira: string; ko: string }
+type DialogItemInput = { jp: string; hira: string; ko: string }
+
+export async function addDialogLines(setId: string, lines: DialogLineInput[]) {
+  if (lines.length === 0) return { success: true, count: 0 }
+  const supabase = await createClient()
+
+  const { data: maxData } = await supabase
+    .from('dialog_lines')
+    .select('sort_order')
+    .eq('set_id', setId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  const maxOrder = maxData?.[0]?.sort_order ?? 0
+  const rows = lines.map((l, i) => ({
+    set_id: setId,
+    speaker: l.speaker,
+    jp: l.jp.trim(),
+    hira: l.hira.trim(),
+    ko: l.ko.trim(),
+    sort_order: maxOrder + i + 1,
+  }))
+
+  const { error } = await supabase.from('dialog_lines').insert(rows)
+  if (error) return { error: error.message }
+  revalidatePath('/admin')
+  return { success: true, count: rows.length }
+}
+
+export async function updateDialogLine(
+  id: string,
+  speaker: 'A' | 'B',
+  jp: string,
+  hira: string,
+  ko: string,
+) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('dialog_lines')
+    .update({ speaker, jp: jp.trim(), hira: hira.trim(), ko: ko.trim() })
+    .eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin')
+  return { success: true }
+}
+
+export async function deleteDialogLine(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('dialog_lines').delete().eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin')
+  return { success: true }
+}
+
+export async function addDialogVocab(setId: string, items: DialogItemInput[]) {
+  if (items.length === 0) return { success: true, count: 0 }
+  const supabase = await createClient()
+
+  const { data: maxData } = await supabase
+    .from('dialog_vocab')
+    .select('sort_order')
+    .eq('set_id', setId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  const maxOrder = maxData?.[0]?.sort_order ?? 0
+  const rows = items.map((item, i) => ({
+    set_id: setId,
+    jp: item.jp.trim(),
+    hira: item.hira.trim(),
+    ko: item.ko.trim(),
+    sort_order: maxOrder + i + 1,
+  }))
+
+  const { error } = await supabase.from('dialog_vocab').insert(rows)
+  if (error) return { error: error.message }
+  revalidatePath('/admin')
+  return { success: true, count: rows.length }
+}
+
+export async function updateDialogVocab(id: string, jp: string, hira: string, ko: string) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('dialog_vocab')
+    .update({ jp: jp.trim(), hira: hira.trim(), ko: ko.trim() })
+    .eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin')
+  return { success: true }
+}
+
+export async function deleteDialogVocab(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('dialog_vocab').delete().eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin')
+  return { success: true }
+}
+
+export async function addDialogExpressions(setId: string, items: DialogItemInput[]) {
+  if (items.length === 0) return { success: true, count: 0 }
+  const supabase = await createClient()
+
+  const { data: maxData } = await supabase
+    .from('dialog_expressions')
+    .select('sort_order')
+    .eq('set_id', setId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+
+  const maxOrder = maxData?.[0]?.sort_order ?? 0
+  const rows = items.map((item, i) => ({
+    set_id: setId,
+    jp: item.jp.trim(),
+    hira: item.hira.trim(),
+    ko: item.ko.trim(),
+    sort_order: maxOrder + i + 1,
+  }))
+
+  const { error } = await supabase.from('dialog_expressions').insert(rows)
+  if (error) return { error: error.message }
+  revalidatePath('/admin')
+  return { success: true, count: rows.length }
+}
+
+export async function updateDialogExpression(id: string, jp: string, hira: string, ko: string) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('dialog_expressions')
+    .update({ jp: jp.trim(), hira: hira.trim(), ko: ko.trim() })
+    .eq('id', id)
+  if (error) return { error: error.message }
+  revalidatePath('/admin')
+  return { success: true }
+}
+
+export async function deleteDialogExpression(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('dialog_expressions').delete().eq('id', id)
+  if (error) return { error: error.message }
   revalidatePath('/admin')
   return { success: true }
 }
