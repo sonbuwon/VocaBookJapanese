@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { DialogSetData, DialogLine, DialogVocab, DialogExpression } from '@/types'
+import SpeakButton from './SpeakButton'
 
 interface DialogStudyViewProps {
   data: DialogSetData
@@ -195,7 +196,8 @@ export default function DialogStudyView({ data }: DialogStudyViewProps) {
                 }}>
                   {current?.front}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-sub)', marginTop: '4px' }}>
+                {current?.sub && <SpeakButton hira={current.sub} />}
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-sub)', marginTop: '2px' }}>
                   탭하여 뒤집기
                 </div>
               </>
