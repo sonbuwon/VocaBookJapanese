@@ -12,6 +12,7 @@ import SetListView from './SetListView'
 import StudyView from './StudyView'
 import DialogSetListView from './DialogSetListView'
 import DialogStudyView from './DialogStudyView'
+import QuizView from './QuizView'
 
 interface AppShellProps {
   initialWordSets: WordSet[]
@@ -86,6 +87,7 @@ export default function AppShell({ initialWordSets, initialSentSets, initialDial
 
   const headerTitle = () => {
     if (appScreen === 'menu') return '일본어 단어장'
+    if (appScreen === 'quiz') return '퀴즈'
     if (appScreen === 'list') {
       if (studyType === 'word') return '단어 세트'
       if (studyType === 'sent') return '문장 세트'
@@ -115,6 +117,7 @@ export default function AppShell({ initialWordSets, initialSentSets, initialDial
           sentCount={sentTotal}
           dialogSetCount={dialogSets.length}
           onSelect={showList}
+          onQuiz={() => setAppScreen('quiz')}
           isAdmin={isAdmin}
         />
       )}
@@ -126,6 +129,10 @@ export default function AppShell({ initialWordSets, initialSentSets, initialDial
           favoritesCount={favCounts[studyType as 'word' | 'sent']}
           onSelect={openSet}
         />
+      )}
+
+      {appScreen === 'quiz' && (
+        <QuizView wordSets={wordSets} />
       )}
 
       {appScreen === 'list' && studyType === 'dialog' && (

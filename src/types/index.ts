@@ -1,5 +1,5 @@
 export type StudyType = 'word' | 'sent' | 'dialog'
-export type AppScreen = 'menu' | 'list' | 'study'
+export type AppScreen = 'menu' | 'list' | 'study' | 'quiz'
 export type CardMode = 'saved' | 'random'
 
 export interface WordSet {

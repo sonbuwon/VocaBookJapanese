@@ -9,11 +9,12 @@ interface MenuViewProps {
   sentCount: number
   dialogSetCount: number
   onSelect: (type: StudyType) => void
+  onQuiz: () => void
   isAdmin: boolean
 }
 
 export default function MenuView({
-  wordSetCount, wordCount, sentSetCount, sentCount, dialogSetCount, onSelect, isAdmin
+  wordSetCount, wordCount, sentSetCount, sentCount, dialogSetCount, onSelect, onQuiz, isAdmin
 }: MenuViewProps) {
   const menuBtnStyle: React.CSSProperties = {
     background: 'var(--card-bg)',
@@ -101,6 +102,28 @@ export default function MenuView({
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>대화 스크립트</div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>{dialogSetCount}개 세트</div>
+        </div>
+        <div style={{ fontSize: '1.2rem', color: 'var(--primary-light)' }}>›</div>
+      </div>
+
+      <div
+        style={menuBtnStyle}
+        onClick={onQuiz}
+        onMouseDown={e => {
+          const el = e.currentTarget as HTMLElement
+          el.style.borderColor = 'var(--primary-light)'
+          el.style.boxShadow = '0 4px 20px rgba(45,106,79,0.15)'
+        }}
+        onMouseUp={e => {
+          const el = e.currentTarget as HTMLElement
+          el.style.borderColor = 'transparent'
+          el.style.boxShadow = '0 2px 12px var(--shadow)'
+        }}
+      >
+        <div style={{ fontSize: '2.2rem', fontWeight: 700, color: 'var(--primary)', width: '52px', textAlign: 'center', flexShrink: 0 }}>✏</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>퀴즈</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>히라가나 / 뜻 맞추기 4지선다</div>
         </div>
         <div style={{ fontSize: '1.2rem', color: 'var(--primary-light)' }}>›</div>
       </div>
