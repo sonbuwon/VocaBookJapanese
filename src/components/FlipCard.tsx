@@ -60,6 +60,32 @@ export default function FlipCard({ word, studyType, isFlipped, onFlip, isFavorit
           </div>
           <SpeakButton hira={word.hira} />
           <div style={{ fontSize: '0.78rem', color: '#aaa', marginTop: '8px' }}>탭해서 뜻 확인</div>
+          <a
+            href={`https://ja.dict.naver.com/#/search?query=${encodeURIComponent(word.jp)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            title="네이버 일본어 사전 검색"
+            style={{
+              position: 'absolute',
+              bottom: '14px',
+              left: '14px',
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              border: '1.5px solid var(--border)',
+              background: 'var(--btn-bg)',
+              color: 'var(--text-sub)',
+              fontSize: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              textDecoration: 'none',
+            }}
+          >
+            📖
+          </a>
           {onDictation && (
             <button
               onClick={e => { e.stopPropagation(); onDictation() }}
