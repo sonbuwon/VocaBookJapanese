@@ -128,6 +128,7 @@ export default function AppShell({ initialWordSets, initialSentSets, initialDial
           studyType={studyType}
           favoritesCount={favCounts[studyType as 'word' | 'sent']}
           onSelect={openSet}
+          onFavoritesCleared={() => setFavCounts(prev => ({ ...prev, [studyType]: 0 }))}
         />
       )}
 

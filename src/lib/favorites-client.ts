@@ -63,6 +63,43 @@ export async function getFavoriteWords(type: StudyType): Promise<Word[]> {
   return data ?? []
 }
 
+// 해당 타입 즐겨찾기 전체 삭제
+export async function clearFavorites(type: StudyType): Promise<void> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  // 1. 유저 즐겨찾기 전체 조회 (보통 소량)
+  const { data: favs } = await supabase
+    .from('user_favorites')
+    .select('id, word_id')
+  if (!favs?.length) return
+
+  // 2. 해당 타입 세트 ID 조회
+  const { data: sets } = await supabase
+    .from('sets').select('id').eq('type', type)
+  if (!sets?.length) return
+  const setIds = sets.map(s => s.id as string)
+
+  // 3. 즐겨찾기된 단어 중 해당 타입 세트에 속하는 것만 확인
+  const favWordIds = favs.map(f => f.word_id as string)
+  const { data: matched } = await supabase
+    .from('words')
+    .select('id')
+    .in('id', favWordIds)
+    .in('set_id', setIds)
+  if (!matched?.length) return
+
+  // 4. primary key로 정확히 삭제
+  const matchedIds = new Set(matched.map(w => w.id as string))
+  const toDelete = favs
+    .filter(f => matchedIds.has(f.word_id as string))
+    .map(f => f.id as string)
+  if (!toDelete.length) return
+
+  await supabase.from('user_favorites').delete().in('id', toDelete)
+}
+
 // 즐겨찾기 토글 — 추가했으면 true, 제거했으면 false 반환
 export async function toggleFavorite(wordId: string): Promise<boolean> {
   const supabase = createClient()

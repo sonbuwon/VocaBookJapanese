@@ -1,17 +1,29 @@
 'use client'
 
+import { useState } from 'react'
 import type { StudyType, WordSet } from '@/types'
-import { FAVORITES_SET_ID } from '@/lib/favorites-client'
+import { FAVORITES_SET_ID, clearFavorites } from '@/lib/favorites-client'
 
 interface SetListViewProps {
   sets: WordSet[]
   studyType: StudyType
   favoritesCount: number
   onSelect: (setId: string) => void
+  onFavoritesCleared: () => void
 }
 
-export default function SetListView({ sets, studyType, favoritesCount, onSelect }: SetListViewProps) {
+export default function SetListView({ sets, studyType, favoritesCount, onSelect, onFavoritesCleared }: SetListViewProps) {
   const label = studyType === 'word' ? '단어' : '문장'
+  const [clearing, setClearing] = useState(false)
+
+  const handleClearFavorites = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm(`즐겨찾기 ${label}을 모두 삭제하시겠습니까?`)) return
+    setClearing(true)
+    await clearFavorites(studyType)
+    setClearing(false)
+    onFavoritesCleared()
+  }
 
   const cardStyle: React.CSSProperties = {
     background: 'var(--card-bg)',
@@ -50,6 +62,27 @@ export default function SetListView({ sets, studyType, favoritesCount, onSelect 
               {favoritesCount > 0 ? `${favoritesCount}개 ${label}` : `저장된 ${label} 없음`}
             </div>
           </div>
+          {favoritesCount > 0 && (
+            <button
+              onClick={handleClearFavorites}
+              disabled={clearing}
+              title="즐겨찾기 전체 삭제"
+              style={{
+                padding: '5px 10px',
+                background: 'transparent',
+                border: '1.5px solid #fed7aa',
+                borderRadius: '8px',
+                color: '#c05621',
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                cursor: clearing ? 'default' : 'pointer',
+                flexShrink: 0,
+                opacity: clearing ? 0.5 : 1,
+              }}
+            >
+              {clearing ? '삭제 중' : '전체 삭제'}
+            </button>
+          )}
           <div style={{ fontSize: '1.2rem', color: '#d97706', flexShrink: 0 }}>›</div>
         </div>
 
