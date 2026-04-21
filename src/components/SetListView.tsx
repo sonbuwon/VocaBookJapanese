@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import type { StudyType, WordSet } from '@/types'
+import type { StudyType, WordSet, Word } from '@/types'
 import { FAVORITES_SET_ID, clearFavorites } from '@/lib/favorites-client'
+import { getWords } from '@/lib/data-client'
+import RelayPlayerModal from './RelayPlayerModal'
 
 interface SetListViewProps {
   defaultSets: WordSet[]
@@ -23,9 +25,14 @@ export default function SetListView({
 }: SetListViewProps) {
   const label = studyType === 'word' ? '단어' : '문장'
   const [clearing, setClearing] = useState(false)
-  const [showDefault, setShowDefault] = useState(true)       // 기본 제공 단어 ON/OFF 토글
-  const [personalOpen, setPersonalOpen] = useState(true)     // 개인 단어 섹션 펼침/접힘
-  const [defaultOpen, setDefaultOpen] = useState(false)      // 기본 제공 단어 섹션 펼침/접힘
+  const [showDefault, setShowDefault] = useState(true)
+  const [personalOpen, setPersonalOpen] = useState(true)
+  const [defaultOpen, setDefaultOpen] = useState(false)
+
+  // 릴레이 플레이어 상태
+  const [relaySet, setRelaySet] = useState<WordSet | null>(null)
+  const [relayWords, setRelayWords] = useState<Word[]>([])
+  const [loadingRelayId, setLoadingRelayId] = useState<string | null>(null)
 
   const handleClearFavorites = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -34,6 +41,19 @@ export default function SetListView({
     await clearFavorites(studyType)
     setClearing(false)
     onFavoritesCleared()
+  }
+
+  const handleRelayClick = async (e: React.MouseEvent, set: WordSet) => {
+    e.stopPropagation()
+    if (loadingRelayId) return
+    setLoadingRelayId(set.id)
+    try {
+      const words = await getWords(set.id)
+      setRelayWords(words)
+      setRelaySet(set)
+    } finally {
+      setLoadingRelayId(null)
+    }
   }
 
   const cardStyle: React.CSSProperties = {
@@ -60,6 +80,64 @@ export default function SetListView({
     border: '1.5px solid var(--border)',
     cursor: 'pointer',
     userSelect: 'none',
+  }
+
+  const relayBtnStyle = (isLoading: boolean): React.CSSProperties => ({
+    padding: '5px 10px',
+    background: 'var(--btn-bg)',
+    border: '1.5px solid var(--primary-light)',
+    borderRadius: '8px',
+    color: 'var(--primary)',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    cursor: isLoading ? 'default' : 'pointer',
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px',
+    opacity: isLoading ? 0.5 : 1,
+  })
+
+  // 세트 카드 렌더 (개인/기본 공통)
+  const renderSetCard = (set: WordSet) => {
+    const isLoadingThis = loadingRelayId === set.id
+    const hasWords = (set.word_count ?? 0) > 0
+    return (
+      <div
+        key={set.id}
+        onClick={() => onSelect(set.id)}
+        style={cardStyle}
+      >
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: '1.05rem', fontWeight: 700, color: 'var(--text)',
+            marginBottom: '4px',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {set.name}
+          </div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>
+            {set.word_count ?? 0}개 {label}
+          </div>
+        </div>
+        {/* 릴레이 재생 버튼 */}
+        {hasWords && (
+          <button
+            onClick={(e) => handleRelayClick(e, set)}
+            disabled={isLoadingThis || !!loadingRelayId}
+            title="릴레이 음성 재생"
+            style={relayBtnStyle(isLoadingThis)}
+          >
+            {isLoadingThis ? (
+              <span style={{ fontSize: '0.7rem' }}>...</span>
+            ) : (
+              <>🔊<span>릴레이</span></>
+            )}
+          </button>
+        )}
+        <div style={{ fontSize: '1.2rem', color: 'var(--primary-light)', flexShrink: 0 }}>›</div>
+      </div>
+    )
   }
 
   return (
@@ -191,19 +269,7 @@ export default function SetListView({
                   <span style={{ fontSize: '0.8rem' }}>홈에서 개인 {label} 관리를 눌러 추가하세요.</span>
                 </div>
               ) : (
-                personalSets.map(set => (
-                  <div
-                    key={set.id}
-                    onClick={() => onSelect(set.id)}
-                    style={cardStyle}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>{set.name}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>{set.word_count ?? 0}개 {label}</div>
-                    </div>
-                    <div style={{ fontSize: '1.2rem', color: 'var(--primary-light)', flexShrink: 0 }}>›</div>
-                  </div>
-                ))
+                personalSets.map(set => renderSetCard(set))
               )}
             </div>
           )}
@@ -255,19 +321,7 @@ export default function SetListView({
                     기본 제공 {label}가 없습니다.
                   </div>
                 ) : (
-                  defaultSets.map(set => (
-                    <div
-                      key={set.id}
-                      onClick={() => onSelect(set.id)}
-                      style={cardStyle}
-                    >
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>{set.name}</div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-sub)' }}>{set.word_count ?? 0}개 {label}</div>
-                      </div>
-                      <div style={{ fontSize: '1.2rem', color: 'var(--primary-light)', flexShrink: 0 }}>›</div>
-                    </div>
-                  ))
+                  defaultSets.map(set => renderSetCard(set))
                 )}
               </div>
             )}
@@ -275,6 +329,15 @@ export default function SetListView({
         )}
 
       </div>
+
+      {/* 릴레이 플레이어 모달 */}
+      {relaySet && (
+        <RelayPlayerModal
+          words={relayWords}
+          setName={relaySet.name}
+          onClose={() => { setRelaySet(null); setRelayWords([]) }}
+        />
+      )}
     </div>
   )
 }
