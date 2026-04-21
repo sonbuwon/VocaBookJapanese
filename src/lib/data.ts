@@ -1,12 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import type { StudyType, WordSet, Word, DialogSetData } from '@/types'
 
-export async function getSets(type: Exclude<StudyType, 'dialog'>): Promise<WordSet[]> {
+// 기본 제공 세트 (is_default = true)
+export async function getDefaultSets(type: Exclude<StudyType, 'dialog'>): Promise<WordSet[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('sets')
     .select('*, words(count)')
     .eq('type', type)
+    .eq('is_default', true)
     .order('sort_order', { ascending: true })
 
   if (error) throw new Error(error.message)
@@ -18,12 +20,37 @@ export async function getSets(type: Exclude<StudyType, 'dialog'>): Promise<WordS
   }))
 }
 
+// 개인 단어 세트 (is_default = false, RLS가 owner_id = auth.uid() 보장)
+export async function getPersonalSets(type: Exclude<StudyType, 'dialog'>): Promise<WordSet[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('sets')
+    .select('*, words(count)')
+    .eq('type', type)
+    .eq('is_default', false)
+    .order('sort_order', { ascending: true })
+
+  if (error) throw new Error(error.message)
+
+  return (data ?? []).map((set: any) => ({
+    ...set,
+    word_count: set.words?.[0]?.count ?? 0,
+    words: undefined,
+  }))
+}
+
+// 기존 getSets는 기본 제공 세트만 반환 (어드민 페이지용)
+export async function getSets(type: Exclude<StudyType, 'dialog'>): Promise<WordSet[]> {
+  return getDefaultSets(type)
+}
+
 export async function getDialogSets(): Promise<WordSet[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('sets')
     .select('*, dialog_lines(count)')
     .eq('type', 'dialog')
+    .eq('is_default', true)
     .order('sort_order', { ascending: true })
 
   if (error) throw new Error(error.message)

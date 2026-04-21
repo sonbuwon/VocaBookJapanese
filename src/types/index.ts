@@ -8,6 +8,8 @@ export interface WordSet {
   type: StudyType
   sort_order: number
   created_at: string
+  is_default?: boolean
+  owner_id?: string | null
   words?: Word[]
   word_count?: number
   line_count?: number

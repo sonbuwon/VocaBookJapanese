@@ -15,14 +15,24 @@ import DialogStudyView from './DialogStudyView'
 import QuizView from './QuizView'
 
 interface AppShellProps {
-  initialWordSets: WordSet[]
-  initialSentSets: WordSet[]
+  initialDefaultWordSets: WordSet[]
+  initialPersonalWordSets: WordSet[]
+  initialDefaultSentSets: WordSet[]
+  initialPersonalSentSets: WordSet[]
   initialDialogSets: WordSet[]
   userEmail: string
   isAdmin: boolean
 }
 
-export default function AppShell({ initialWordSets, initialSentSets, initialDialogSets, userEmail, isAdmin }: AppShellProps) {
+export default function AppShell({
+  initialDefaultWordSets,
+  initialPersonalWordSets,
+  initialDefaultSentSets,
+  initialPersonalSentSets,
+  initialDialogSets,
+  userEmail,
+  isAdmin,
+}: AppShellProps) {
   useInactivityLogout()
 
   const [appScreen, setAppScreen] = useState<AppScreen>('menu')
@@ -33,14 +43,25 @@ export default function AppShell({ initialWordSets, initialSentSets, initialDial
   const [isLoadingWords, setIsLoadingWords] = useState(false)
   const [favCounts, setFavCounts] = useState<{ word: number; sent: number }>({ word: 0, sent: 0 })
 
-  const wordSets = initialWordSets
-  const sentSets = initialSentSets
+  const defaultWordSets = initialDefaultWordSets
+  const personalWordSets = initialPersonalWordSets
+  const defaultSentSets = initialDefaultSentSets
+  const personalSentSets = initialPersonalSentSets
   const dialogSets = initialDialogSets
-  const allSets = [...wordSets, ...sentSets, ...dialogSets]
-  const currentSets = studyType === 'word' ? wordSets : sentSets
 
-  const wordTotal = wordSets.reduce((s, st) => s + (st.word_count ?? 0), 0)
-  const sentTotal = sentSets.reduce((s, st) => s + (st.word_count ?? 0), 0)
+  const allSets = [
+    ...defaultWordSets, ...personalWordSets,
+    ...defaultSentSets, ...personalSentSets,
+    ...dialogSets,
+  ]
+
+  const currentDefaultSets = studyType === 'word' ? defaultWordSets : defaultSentSets
+  const currentPersonalSets = studyType === 'word' ? personalWordSets : personalSentSets
+
+  const wordSetCount = defaultWordSets.length + personalWordSets.length
+  const sentSetCount = defaultSentSets.length + personalSentSets.length
+  const wordTotal = [...defaultWordSets, ...personalWordSets].reduce((s, st) => s + (st.word_count ?? 0), 0)
+  const sentTotal = [...defaultSentSets, ...personalSentSets].reduce((s, st) => s + (st.word_count ?? 0), 0)
 
   // 리스트 화면으로 전환될 때마다 즐겨찾기 수 갱신
   useEffect(() => {
@@ -111,9 +132,9 @@ export default function AppShell({ initialWordSets, initialSentSets, initialDial
 
       {appScreen === 'menu' && (
         <MenuView
-          wordSetCount={wordSets.length}
+          wordSetCount={wordSetCount}
           wordCount={wordTotal}
-          sentSetCount={sentSets.length}
+          sentSetCount={sentSetCount}
           sentCount={sentTotal}
           dialogSetCount={dialogSets.length}
           onSelect={showList}
@@ -124,7 +145,8 @@ export default function AppShell({ initialWordSets, initialSentSets, initialDial
 
       {appScreen === 'list' && studyType !== 'dialog' && (
         <SetListView
-          sets={currentSets}
+          defaultSets={currentDefaultSets}
+          personalSets={currentPersonalSets}
           studyType={studyType}
           favoritesCount={favCounts[studyType as 'word' | 'sent']}
           onSelect={openSet}
@@ -133,7 +155,7 @@ export default function AppShell({ initialWordSets, initialSentSets, initialDial
       )}
 
       {appScreen === 'quiz' && (
-        <QuizView wordSets={wordSets} />
+        <QuizView wordSets={[...defaultWordSets, ...personalWordSets]} />
       )}
 
       {appScreen === 'list' && studyType === 'dialog' && (

@@ -30,6 +30,19 @@ export default function MenuView({
     width: '100%',
   }
 
+  const mgmtBtnStyle: React.CSSProperties = {
+    display: 'block',
+    textAlign: 'center',
+    padding: '10px',
+    fontSize: '0.85rem',
+    color: 'var(--text-sub)',
+    textDecoration: 'none',
+    borderRadius: '10px',
+    border: '1px solid var(--border)',
+    background: 'var(--card-bg)',
+    transition: 'color 0.15s',
+  }
+
   return (
     <div style={{
       width: '100%',
@@ -128,24 +141,20 @@ export default function MenuView({
         <div style={{ fontSize: '1.2rem', color: 'var(--primary-light)' }}>›</div>
       </div>
 
-      {isAdmin && <a
-        href="/admin"
-        style={{
-          display: 'block',
-          textAlign: 'center',
-          marginTop: '8px',
-          padding: '10px',
-          fontSize: '0.85rem',
-          color: 'var(--text-sub)',
-          textDecoration: 'none',
-          borderRadius: '10px',
-          border: '1px solid var(--border)',
-          background: 'var(--card-bg)',
-          transition: 'color 0.15s',
-        }}
-      >
-        ⚙ 단어 관리
-      </a>}
+      {/* 관리 버튼 영역 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+        {/* 개인 단어 관리 — 모든 유저 */}
+        <a href="/my-words" style={mgmtBtnStyle}>
+          ✏ 개인 단어 · 문장 관리
+        </a>
+
+        {/* 관리자 단어 관리 — 어드민 전용 */}
+        {isAdmin && (
+          <a href="/admin" style={mgmtBtnStyle}>
+            ⚙ 관리자 단어 관리
+          </a>
+        )}
+      </div>
     </div>
   )
 }

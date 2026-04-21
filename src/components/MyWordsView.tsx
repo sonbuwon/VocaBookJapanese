@@ -5,60 +5,44 @@ import { useRouter } from 'next/navigation'
 import type { WordSet, Word, StudyType } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import {
-  createSet,
-  renameSet,
-  deleteSet,
-  swapSetOrder,
-  addWord,
-  addWords,
-  updateWord,
-  deleteWord,
-} from '@/app/admin/actions'
-import DialogAdminPanel from './DialogAdminPanel'
+  createPersonalSet,
+  renamePersonalSet,
+  deletePersonalSet,
+  swapPersonalSetOrder,
+  addPersonalWord,
+  addPersonalWords,
+  updatePersonalWord,
+  deletePersonalWord,
+} from '@/app/my-words/actions'
 
-interface AdminViewProps {
+interface MyWordsViewProps {
   wordSets: WordSet[]
   sentSets: WordSet[]
-  dialogSets: WordSet[]
 }
 
 type WordForm = { jp: string; hira: string; ko: string }
 
-export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewProps) {
+export default function MyWordsView({ wordSets, sentSets }: MyWordsViewProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [tab, setTab] = useState<StudyType | 'dialog'>('word')
+  const [tab, setTab] = useState<'word' | 'sent'>('word')
 
-  // 펼쳐진 세트: setId → Word[] | 'loading'
   const [expanded, setExpanded] = useState<Record<string, Word[] | 'loading'>>({})
-
-  // 세트 이름 인라인 수정
   const [editingSetId, setEditingSetId] = useState<string | null>(null)
   const [editingSetName, setEditingSetName] = useState('')
-
-  // 새 세트 추가 폼
   const [showAddSet, setShowAddSet] = useState(false)
   const [newSetName, setNewSetName] = useState('')
-
-  // 단어 추가 폼: setId → {jp, hira, ko}
   const [addWordData, setAddWordData] = useState<Record<string, WordForm>>({})
-  // 중복 에러: setId → 에러 메시지
   const [dupError, setDupError] = useState<Record<string, string>>({})
-
-  // CSV 일괄 추가
   const [csvOpen, setCsvOpen] = useState<Record<string, boolean>>({})
   const [csvText, setCsvText] = useState<Record<string, string>>({})
   const [csvResult, setCsvResult] = useState<Record<string, string>>({})
-
-  // 단어 인라인 수정
   const [editingWordId, setEditingWordId] = useState<string | null>(null)
   const [editingWordData, setEditingWordData] = useState<WordForm>({ jp: '', hira: '', ko: '' })
 
   const sets = tab === 'word' ? wordSets : sentSets
   const label = tab === 'word' ? '단어' : '문장'
-  const isDialogTab = tab === 'dialog'
 
-  // --- 단어 로드 ---
   const toggleExpand = async (setId: string) => {
     if (expanded[setId] !== undefined) {
       setExpanded(prev => { const n = { ...prev }; delete n[setId]; return n })
@@ -85,7 +69,6 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
     setExpanded(prev => ({ ...prev, [setId]: words }))
   }
 
-  // --- 세트 조작 ---
   const handleRenameStart = (set: WordSet) => {
     setEditingSetId(set.id)
     setEditingSetName(set.name)
@@ -94,7 +77,7 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
   const handleRenameSave = (setId: string) => {
     if (!editingSetName.trim()) return
     startTransition(async () => {
-      await renameSet(setId, editingSetName.trim())
+      await renamePersonalSet(setId, editingSetName.trim())
       setEditingSetId(null)
       router.refresh()
     })
@@ -103,7 +86,7 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
   const handleDeleteSet = (set: WordSet) => {
     if (!confirm(`"${set.name}" 세트를 삭제하시겠습니까?\n포함된 모든 ${label}도 함께 삭제됩니다.`)) return
     startTransition(async () => {
-      await deleteSet(set.id)
+      await deletePersonalSet(set.id)
       setExpanded(prev => { const n = { ...prev }; delete n[set.id]; return n })
       router.refresh()
     })
@@ -115,7 +98,7 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
     const a = sets[idx]
     const b = sets[targetIdx]
     startTransition(async () => {
-      await swapSetOrder(a.id, a.sort_order, b.id, b.sort_order)
+      await swapPersonalSetOrder(a.id, a.sort_order, b.id, b.sort_order)
       router.refresh()
     })
   }
@@ -123,20 +106,22 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
   const handleCreateSet = () => {
     if (!newSetName.trim()) return
     startTransition(async () => {
-      await createSet(newSetName.trim(), tab)
+      const result = await createPersonalSet(newSetName.trim(), tab)
+      if (result.error) {
+        alert(result.error)
+        return
+      }
       setNewSetName('')
       setShowAddSet(false)
       router.refresh()
     })
   }
 
-  // --- 단어 조작 ---
   const updateWordForm = (setId: string, field: keyof WordForm, value: string) => {
     setAddWordData(prev => ({
       ...prev,
       [setId]: { ...(prev[setId] ?? { jp: '', hira: '', ko: '' }), [field]: value },
     }))
-    // jp 또는 hira 수정 시 에러 초기화
     if (field === 'jp' || field === 'hira') {
       setDupError(prev => ({ ...prev, [setId]: '' }))
     }
@@ -146,13 +131,10 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
     const form = addWordData[setId]
     if (!form?.jp?.trim() || !form?.hira?.trim() || !form?.ko?.trim()) return
 
-    // 중복 체크: 같은 세트 내 jp + hira 조합
     const wordList = Array.isArray(expanded[setId]) ? (expanded[setId] as Word[]) : []
     const jpNorm = form.jp.trim()
     const hiraNorm = form.hira.trim()
-    const isDup = wordList.some(
-      w => w.jp.trim() === jpNorm && w.hira.trim() === hiraNorm
-    )
+    const isDup = wordList.some(w => w.jp.trim() === jpNorm && w.hira.trim() === hiraNorm)
     if (isDup) {
       setDupError(prev => ({ ...prev, [setId]: '이미 존재하는 단어입니다.' }))
       return
@@ -160,7 +142,7 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
 
     setDupError(prev => ({ ...prev, [setId]: '' }))
     startTransition(async () => {
-      await addWord(setId, form.jp, form.hira, form.ko)
+      await addPersonalWord(setId, form.jp, form.hira, form.ko)
       await reloadWords(setId)
       setAddWordData(prev => ({ ...prev, [setId]: { jp: '', hira: '', ko: '' } }))
       router.refresh()
@@ -175,13 +157,12 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
   const handleEditWordSave = (setId: string, wordId: string) => {
     if (!editingWordData.jp.trim()) return
     startTransition(async () => {
-      await updateWord(wordId, editingWordData.jp, editingWordData.hira, editingWordData.ko)
+      await updatePersonalWord(wordId, editingWordData.jp, editingWordData.hira, editingWordData.ko)
       setEditingWordId(null)
       await reloadWords(setId)
     })
   }
 
-  // CSV 파싱: 유효 행 / 중복 / 형식 오류 분류
   const parseCsv = (text: string, wordList: Word[]) => {
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
     const valid: { jp: string; hira: string; ko: string }[] = []
@@ -207,7 +188,7 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
       return
     }
     startTransition(async () => {
-      await addWords(setId, valid)
+      await addPersonalWords(setId, valid)
       await reloadWords(setId)
       setCsvText(prev => ({ ...prev, [setId]: '' }))
       setCsvOpen(prev => ({ ...prev, [setId]: false }))
@@ -219,7 +200,7 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
   const handleDeleteWord = (setId: string, wordId: string) => {
     if (!confirm('이 단어를 삭제하시겠습니까?')) return
     startTransition(async () => {
-      await deleteWord(wordId)
+      await deletePersonalWord(wordId)
       await reloadWords(setId)
       router.refresh()
     })
@@ -248,13 +229,13 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
           }}
         >←</a>
         <h1 style={{ flex: 1, textAlign: 'center', fontSize: '1.15rem', fontWeight: 700, letterSpacing: '0.04em' }}>
-          관리자 단어 관리
+          개인 단어 · 문장 관리
         </h1>
       </header>
 
       {/* 탭 */}
       <div style={{ display: 'flex', background: 'var(--card-bg)', borderBottom: '2px solid var(--border)', flexShrink: 0 }}>
-        {(['word', 'sent', 'dialog'] as const).map(t => (
+        {(['word', 'sent'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -271,22 +252,18 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
               cursor: 'pointer',
             }}
           >
-            {t === 'word' ? '단어 세트' : t === 'sent' ? '문장 세트' : '대화 세트'}
+            {t === 'word' ? '단어 세트' : '문장 세트'}
           </button>
         ))}
       </div>
 
-      {/* 대화 탭 */}
-      {isDialogTab && (
-        <DialogAdminPanel dialogSets={dialogSets} />
-      )}
+      {/* 세트 목록 */}
+      <div style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto' }}>
 
-      {/* 세트 목록 (단어/문장) */}
-      {!isDialogTab && <div style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto' }}>
-
-        {sets.length === 0 && (
+        {sets.length === 0 && !showAddSet && (
           <p style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-sub)', fontSize: '0.9rem' }}>
-            {label} 세트가 없습니다.
+            개인 {label} 세트가 없습니다.<br />
+            <span style={{ fontSize: '0.82rem' }}>아래에서 새 세트를 추가하세요.</span>
           </p>
         )}
 
@@ -383,8 +360,7 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
                     <div style={{ textAlign: 'center', padding: '16px', color: 'var(--text-sub)', fontSize: '0.85rem' }}>로딩 중...</div>
                   ) : (
                     <>
-                      {/* 단어/문장 추가 폼 — 목록 위에 배치 */}
-                      <div style={{ marginBottom: wordList.length > 0 ? '0' : '0' }}>
+                      <div>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '7px' }}>
                           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-sub)' }}>
                             새 {label} 추가
@@ -436,7 +412,6 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
                                 lineHeight: 1.6,
                               }}
                             />
-                            {/* 미리보기 */}
                             {(() => {
                               const text = csvText[set.id] ?? ''
                               if (!text.trim()) return null
@@ -472,14 +447,13 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
                           </div>
                         )}
 
-                        {/* 추가 결과 메시지 */}
                         {csvResult[set.id] && (
                           <div style={{ fontSize: '0.78rem', color: 'var(--primary)', marginBottom: '8px', fontWeight: 600 }}>
                             {csvResult[set.id]}
                           </div>
                         )}
+
                         {tab === 'sent' ? (
-                          /* 문장: 각 입력란을 한 줄씩 세로 배치 */
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             <input
                               value={wordForm.jp}
@@ -505,12 +479,9 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
                               disabled={isPending || !canAddWord}
                               style={{
                                 padding: '9px',
-                                background: 'var(--primary)',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontSize: '0.88rem',
-                                fontWeight: 700,
+                                background: 'var(--primary)', color: '#fff',
+                                border: 'none', borderRadius: '8px',
+                                fontSize: '0.88rem', fontWeight: 700,
                                 cursor: canAddWord ? 'pointer' : 'not-allowed',
                                 opacity: canAddWord ? 1 : 0.4,
                               }}
@@ -522,7 +493,6 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
                             )}
                           </div>
                         ) : (
-                          /* 단어: 가로 배치 */
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                               <input
@@ -549,12 +519,9 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
                                 disabled={isPending || !canAddWord}
                                 style={{
                                   padding: '8px 14px',
-                                  background: 'var(--primary)',
-                                  color: '#fff',
-                                  border: 'none',
-                                  borderRadius: '8px',
-                                  fontSize: '0.85rem',
-                                  fontWeight: 700,
+                                  background: 'var(--primary)', color: '#fff',
+                                  border: 'none', borderRadius: '8px',
+                                  fontSize: '0.85rem', fontWeight: 700,
                                   cursor: canAddWord ? 'pointer' : 'not-allowed',
                                   opacity: canAddWord ? 1 : 0.4,
                                   flexShrink: 0,
@@ -570,7 +537,6 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
                         )}
                       </div>
 
-                      {/* 단어 목록 — 추가 폼 아래 배치, 최근 추가순 */}
                       {wordList.length > 0 && (
                         <div style={{ borderTop: '1px solid var(--border)', marginTop: '10px', paddingTop: '10px' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -701,7 +667,7 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
         )}
 
         <div style={{ height: '16px' }} />
-      </div>}
+      </div>
     </div>
   )
 }
