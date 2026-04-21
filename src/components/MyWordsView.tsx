@@ -14,6 +14,7 @@ import {
   updatePersonalWord,
   deletePersonalWord,
 } from '@/app/my-words/actions'
+import { downloadSetAsCsv, downloadAllSetsAsJson } from '@/lib/exportUtils'
 
 interface MyWordsViewProps {
   wordSets: WordSet[]
@@ -39,6 +40,10 @@ export default function MyWordsView({ wordSets, sentSets }: MyWordsViewProps) {
   const [csvResult, setCsvResult] = useState<Record<string, string>>({})
   const [editingWordId, setEditingWordId] = useState<string | null>(null)
   const [editingWordData, setEditingWordData] = useState<WordForm>({ jp: '', hira: '', ko: '' })
+
+  // Export 상태
+  const [exportingSetId, setExportingSetId] = useState<string | null>(null)
+  const [exportingAll, setExportingAll] = useState(false)
 
   const sets = tab === 'word' ? wordSets : sentSets
   const label = tab === 'word' ? '단어' : '문장'
@@ -206,6 +211,35 @@ export default function MyWordsView({ wordSets, sentSets }: MyWordsViewProps) {
     })
   }
 
+  const handleExportSet = async (set: WordSet) => {
+    setExportingSetId(set.id)
+    try {
+      const words = Array.isArray(expanded[set.id])
+        ? (expanded[set.id] as Word[])
+        : await fetchWords(set.id)
+      downloadSetAsCsv(set.name, words)
+    } finally {
+      setExportingSetId(null)
+    }
+  }
+
+  const handleExportAll = async () => {
+    setExportingAll(true)
+    try {
+      const results = await Promise.all(
+        sets.map(async set => ({
+          name: set.name,
+          words: Array.isArray(expanded[set.id])
+            ? (expanded[set.id] as Word[])
+            : await fetchWords(set.id),
+        }))
+      )
+      downloadAllSetsAsJson(label, results)
+    } finally {
+      setExportingAll(false)
+    }
+  }
+
   return (
     <div style={{ width: '100%', maxWidth: '480px', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
 
@@ -265,6 +299,28 @@ export default function MyWordsView({ wordSets, sentSets }: MyWordsViewProps) {
             개인 {label} 세트가 없습니다.<br />
             <span style={{ fontSize: '0.82rem' }}>아래에서 새 세트를 추가하세요.</span>
           </p>
+        )}
+
+        {sets.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              onClick={handleExportAll}
+              disabled={exportingAll}
+              style={{
+                padding: '6px 14px',
+                background: 'var(--btn-bg)',
+                border: '1.5px solid var(--primary-light)',
+                borderRadius: '8px',
+                color: 'var(--primary)',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                cursor: exportingAll ? 'default' : 'pointer',
+                opacity: exportingAll ? 0.5 : 1,
+              }}
+            >
+              {exportingAll ? '내보내는 중...' : '↓ 전체 내보내기 (JSON)'}
+            </button>
+          </div>
         )}
 
         {sets.map((set, idx) => {
@@ -348,6 +404,14 @@ export default function MyWordsView({ wordSets, sentSets }: MyWordsViewProps) {
                       {isExpanded ? '접기' : label + ' 관리'}
                     </button>
                     <button onClick={() => handleRenameStart(set)} style={chipBtn('default')}>이름</button>
+                    <button
+                      onClick={() => handleExportSet(set)}
+                      disabled={exportingSetId === set.id}
+                      title="CSV로 내보내기"
+                      style={chipBtn('default')}
+                    >
+                      {exportingSetId === set.id ? '...' : '↓CSV'}
+                    </button>
                     <button onClick={() => handleDeleteSet(set)} style={chipBtn('red')}>삭제</button>
                   </>
                 )}

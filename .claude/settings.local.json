@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(wc -l /d/Buwon_Room/Projects/VocaBook2/src/components/*.tsx)"
+      "Bash(wc -l /d/Buwon_Room/Projects/VocaBook2/src/components/*.tsx)",
+      "Bash(gh pr:*)",
+      "Bash(where gh:*)",
+      "Bash(cmd /c \"where gh 2>nul || echo not_found\")",
+      "Bash(cmd /c \"gh --version 2>&1 || echo NOT_FOUND\")",
+      "Bash(cmd /c \"C:\\\\\\\\Program Files\\\\\\\\GitHub CLI\\\\\\\\gh.exe --version 2>&1 || echo NOT_FOUND\")",
+      "Bash(powershell -Command \"Get-Command gh -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source; if \\(-not \\(Get-Command gh -ErrorAction SilentlyContinue\\)\\) { 'NOT_FOUND' }\")",
+      "Bash(powershell -Command ':*)"
     ]
   }
 }

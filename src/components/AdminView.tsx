@@ -14,6 +14,7 @@ import {
   updateWord,
   deleteWord,
 } from '@/app/admin/actions'
+import { downloadSetAsCsv, downloadAllSetsAsJson } from '@/lib/exportUtils'
 import DialogAdminPanel from './DialogAdminPanel'
 
 interface AdminViewProps {
@@ -53,6 +54,10 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
   // 단어 인라인 수정
   const [editingWordId, setEditingWordId] = useState<string | null>(null)
   const [editingWordData, setEditingWordData] = useState<WordForm>({ jp: '', hira: '', ko: '' })
+
+  // Export 상태
+  const [exportingSetId, setExportingSetId] = useState<string | null>(null)
+  const [exportingAll, setExportingAll] = useState(false)
 
   const sets = tab === 'word' ? wordSets : sentSets
   const label = tab === 'word' ? '단어' : '문장'
@@ -181,6 +186,37 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
     })
   }
 
+  // ─── Export 핸들러 ──────────────────────────────────────────────────────────
+
+  const handleExportSet = async (set: WordSet) => {
+    setExportingSetId(set.id)
+    try {
+      // 이미 펼쳐서 단어가 로드된 경우 재사용, 아니면 새로 fetch
+      const words = Array.isArray(expanded[set.id])
+        ? (expanded[set.id] as Word[])
+        : await fetchWords(set.id)
+      downloadSetAsCsv(set.name, words)
+    } finally {
+      setExportingSetId(null)
+    }
+  }
+
+  const handleExportAll = async () => {
+    if (sets.length === 0) return
+    setExportingAll(true)
+    try {
+      const setsWithWords = await Promise.all(
+        sets.map(async set => ({
+          name: set.name,
+          words: await fetchWords(set.id),
+        }))
+      )
+      downloadAllSetsAsJson(tab === 'word' ? '단어' : '문장', setsWithWords)
+    } finally {
+      setExportingAll(false)
+    }
+  }
+
   // CSV 파싱: 유효 행 / 중복 / 형식 오류 분류
   const parseCsv = (text: string, wordList: Word[]) => {
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
@@ -284,6 +320,33 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
       {/* 세트 목록 (단어/문장) */}
       {!isDialogTab && <div style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto' }}>
 
+        {/* 전체 내보내기 */}
+        {sets.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              onClick={handleExportAll}
+              disabled={exportingAll}
+              title={`현재 탭의 모든 ${label} 세트를 JSON으로 내보냅니다`}
+              style={{
+                padding: '7px 14px',
+                background: 'var(--btn-bg)',
+                color: 'var(--primary)',
+                border: '1.5px solid var(--primary-light)',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: exportingAll ? 'default' : 'pointer',
+                opacity: exportingAll ? 0.5 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+              }}
+            >
+              {exportingAll ? '내보내는 중...' : '↓ 전체 내보내기'}
+            </button>
+          </div>
+        )}
+
         {sets.length === 0 && (
           <p style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-sub)', fontSize: '0.9rem' }}>
             {label} 세트가 없습니다.
@@ -371,6 +434,14 @@ export default function AdminView({ wordSets, sentSets, dialogSets }: AdminViewP
                       {isExpanded ? '접기' : label + ' 관리'}
                     </button>
                     <button onClick={() => handleRenameStart(set)} style={chipBtn('default')}>이름</button>
+                    <button
+                      onClick={() => handleExportSet(set)}
+                      disabled={exportingSetId === set.id}
+                      title="CSV로 내보내기"
+                      style={chipBtn('default')}
+                    >
+                      {exportingSetId === set.id ? '...' : '↓CSV'}
+                    </button>
                     <button onClick={() => handleDeleteSet(set)} style={chipBtn('red')}>삭제</button>
                   </>
                 )}
