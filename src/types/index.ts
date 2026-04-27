@@ -22,6 +22,7 @@ export interface Word {
   hira: string
   ko: string
   sort_order: number
+  memo?: string | null
 }
 
 export interface DialogLine {

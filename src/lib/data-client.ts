@@ -52,6 +52,15 @@ export async function getWords(setId: string): Promise<Word[]> {
   return data ?? []
 }
 
+export async function saveMemo(wordId: string, memo: string): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase
+    .from('words')
+    .update({ memo })
+    .eq('id', wordId)
+  if (error) throw new Error(error.message)
+}
+
 export async function getDialogSetData(setId: string): Promise<DialogSetData> {
   const supabase = createClient()
   const [linesRes, vocabRes, expressionsRes] = await Promise.all([

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import type { Word, StudyType, CardMode } from '@/types'
 import { shuffle } from '@/lib/utils'
 import { getFavoriteWordIds, toggleFavorite } from '@/lib/favorites-client'
+import { saveMemo } from '@/lib/data-client'
 import FlipCard from './FlipCard'
 import DictationCanvas from './DictationCanvas'
 
@@ -51,6 +52,11 @@ export default function StudyView({ words, studyType }: StudyViewProps) {
     setCurrent(next)
     setIsFlipped(false)
     setDictationOpen(false)
+  }
+
+  const handleMemoSave = async (wordId: string, memo: string) => {
+    await saveMemo(wordId, memo)
+    setDeck(prev => prev.map(w => w.id === wordId ? { ...w, memo } : w))
   }
 
   const handleToggleFavorite = async (wordId: string) => {
@@ -119,6 +125,7 @@ export default function StudyView({ words, studyType }: StudyViewProps) {
               isFavorited={favIds.has(deck[current].id)}
               onToggleFavorite={() => handleToggleFavorite(deck[current].id)}
               onDictation={() => setDictationOpen(o => !o)}
+              onMemoSave={studyType === 'sent' ? (memo) => handleMemoSave(deck[current].id, memo) : undefined}
             />
             {dictationOpen && (
               <DictationCanvas
