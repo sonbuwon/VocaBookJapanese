@@ -9,9 +9,11 @@ interface HeaderProps {
   showLogout?: boolean
   showHome?: boolean
   onHome?: () => void
+  isDark?: boolean
+  onToggleTheme?: () => void
 }
 
-export default function Header({ title, showBack, onBack, showLogout, showHome, onHome }: HeaderProps) {
+export default function Header({ title, showBack, onBack, showLogout, showHome, onHome, isDark, onToggleTheme }: HeaderProps) {
   return (
     <header style={{
       width: '100%',
@@ -23,24 +25,44 @@ export default function Header({ title, showBack, onBack, showLogout, showHome, 
       gap: '10px',
       position: 'relative',
     }}>
-      <button
-        onClick={onBack}
-        style={{
-          position: 'absolute',
-          left: '14px',
-          background: 'none',
-          border: 'none',
-          color: '#fff',
-          fontSize: '1.5rem',
-          cursor: 'pointer',
-          lineHeight: 1,
-          padding: '4px 6px',
-          borderRadius: '6px',
-          visibility: showBack ? 'visible' : 'hidden',
-        }}
-      >
-        ←
-      </button>
+      {showBack ? (
+        <button
+          onClick={onBack}
+          style={{
+            position: 'absolute',
+            left: '14px',
+            background: 'none',
+            border: 'none',
+            color: '#fff',
+            fontSize: '1.5rem',
+            cursor: 'pointer',
+            lineHeight: 1,
+            padding: '4px 6px',
+            borderRadius: '6px',
+          }}
+        >
+          ←
+        </button>
+      ) : (
+        <button
+          onClick={onToggleTheme}
+          title={isDark ? '라이트 모드' : '다크 모드'}
+          style={{
+            position: 'absolute',
+            left: '14px',
+            background: 'rgba(255,255,255,0.18)',
+            border: 'none',
+            color: '#fff',
+            fontSize: '1.0rem',
+            cursor: 'pointer',
+            lineHeight: 1,
+            padding: '5px 8px',
+            borderRadius: '6px',
+          }}
+        >
+          {isDark ? '☀' : '☾'}
+        </button>
+      )}
       <h1 style={{
         flex: 1,
         fontSize: '1.15rem',

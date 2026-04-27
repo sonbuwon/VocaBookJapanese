@@ -35,6 +35,24 @@ export default function AppShell({
 }: AppShellProps) {
   useInactivityLogout()
 
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    setIsDark(document.documentElement.getAttribute('data-theme') === 'dark')
+  }, [])
+
+  const toggleTheme = () => {
+    const next = !isDark
+    setIsDark(next)
+    if (next) {
+      document.documentElement.setAttribute('data-theme', 'dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.documentElement.removeAttribute('data-theme')
+      localStorage.setItem('theme', 'light')
+    }
+  }
+
   const [appScreen, setAppScreen] = useState<AppScreen>('menu')
   const [studyType, setStudyType] = useState<StudyType>('word')
   const [currentSetId, setCurrentSetId] = useState<string | null>(null)
@@ -128,6 +146,8 @@ export default function AppShell({
         showLogout={appScreen === 'menu'}
         showHome={appScreen !== 'menu'}
         onHome={() => setAppScreen('menu')}
+        isDark={isDark}
+        onToggleTheme={toggleTheme}
       />
 
       {appScreen === 'menu' && (

@@ -16,6 +16,20 @@
   --btn-active-text: #ffffff;
 }
 
+[data-theme="dark"] {
+  --primary: #52b788;
+  --primary-light: #74c69d;
+  --bg: #121220;
+  --card-bg: #1e1e30;
+  --text: #e8e8f0;
+  --text-sub: #8888a0;
+  --border: #2e2e44;
+  --shadow: rgba(0,0,0,0.45);
+  --btn-bg: #1e2e28;
+  --btn-active-bg: #52b788;
+  --btn-active-text: #121220;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

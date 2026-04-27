@@ -19,6 +19,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}` }} />
+      </head>
       <body className={notoSansKR.className}>{children}</body>
     </html>
   )
